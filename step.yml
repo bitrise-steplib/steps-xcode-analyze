@@ -1,0 +1,55 @@
+title: Xcode Analyze
+summary: Xcode Analyze
+description: |-
+  Runs Xcode's `analyze` action.
+website: https://github.com/bitrise-io/steps-xcode-analyze
+source_code_url: https://github.com/bitrise-io/steps-xcode-analyze
+support_url: https://github.com/bitrise-io/steps-xcode-analyze/issues
+host_os_tags:
+  - "osx-10.10"
+project_type_tags:
+  - ios
+type_tags:
+  - build
+  - xcode
+is_requires_admin_user: false
+is_always_run: false
+is_skippable: false
+dependencies:
+  - manager: _
+    name: xcode
+inputs:
+  - workdir:
+    opts:
+      title: "Working directory"
+      description: |
+        Working directory of the step.
+        You can leave it empty to don't change it.
+      is_required: false
+      is_expand: true
+  - project_path:
+    opts:
+      title: "Project (or Workspace) path"
+      description: |
+        A `.xcodeproj` or `.xcworkspace` path, relative to
+        the Workfing directory (if specified).
+      is_required: true
+      is_expand: true
+  - scheme:
+    opts:
+      title: "Scheme name"
+      description: |
+        The Scheme to use.
+
+        **IMPORTANT**: The Scheme have to be marked as __shared__ in Xcode!
+      is_required: true
+      is_expand: true
+  - is_clean_build: "yes"
+    opts:
+      title: "Do a clean Xcode build before testing?"
+      value_options:
+        - "yes"
+        - "no"
+      is_required: true
+      is_expand: true
+outputs: []
