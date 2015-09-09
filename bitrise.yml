@@ -5,7 +5,7 @@ app:
   envs:
   # define these in your .bitrise.secrets.yml
   - BITRISE_SOURCE_DIR:
-  - BITRISE_PROJECT_PATH​:
+  - BITRISE_PROJECT_PATH:
   - BITRISE_SCHEME:
 
 workflows:
