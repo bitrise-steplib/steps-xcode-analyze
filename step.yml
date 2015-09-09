@@ -18,32 +18,38 @@ is_skippable: false
 dependencies:
   - manager: _
     name: xcode
+run_if: ""
 inputs:
-  - workdir:
+  - workdir: $BITRISE_SOURCE_DIR
     opts:
       title: "Working directory"
+      summary: ""
       description: |
         Working directory of the step.
         You can leave it empty to don't change it.
       is_required: false
       is_expand: true
-  - project_path:
+  - project_path: $BITRISE_PROJECT_PATH​
     opts:
       title: "Project (or Workspace) path"
+      summary: ""
       description: |
         A `.xcodeproj` or `.xcworkspace` path, relative to
         the Workfing directory (if specified).
       is_required: true
       is_expand: true
-  - scheme:
+      is_dont_change_value: false
+  - scheme: $BITRISE_SCHEME
     opts:
       title: "Scheme name"
+      summary: ""
       description: |
         The Scheme to use.
 
         **IMPORTANT**: The Scheme have to be marked as __shared__ in Xcode!
       is_required: true
       is_expand: true
+      is_dont_change_value: false
   - is_clean_build: "yes"
     opts:
       title: "Do a clean Xcode build before testing?"
@@ -52,4 +58,5 @@ inputs:
         - "no"
       is_required: true
       is_expand: true
+      is_dont_change_value: false
 outputs: []
