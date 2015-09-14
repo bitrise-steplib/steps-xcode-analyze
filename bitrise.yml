@@ -13,3 +13,4 @@ workflows:
     steps:
     - path::./:
         inputs:
+        - is_force_code_sign: "no"

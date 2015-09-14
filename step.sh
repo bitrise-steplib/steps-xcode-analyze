@@ -48,11 +48,18 @@ if [[ "${is_clean_build}" == "yes" ]] ; then
 	clean_build_param='clean'
 fi
 
+force_code_signing_params=''
+if [[ "${is_force_code_sign}" == "yes" ]] ; then
+	echo " (!) Using Force Code Signing mode!"
+	force_code_signing_params="PROVISIONING_PROFILE=\"${BITRISE_PROVISIONING_PROFILE_ID}\" CODE_SIGN_IDENTITY=\"${BITRISE_CODE_SIGN_IDENTITY}\""
+	echo " (i) force_code_signing_params: ${force_code_signing_params}"
+fi
+
 set -v
 
 xcodebuild ${CONFIG_xcode_project_action} "${project_path}" \
 	-scheme "${scheme}" \
 	${clean_build_param} analyze \
-	-verbose
+	-verbose ${force_code_signing_params}
 
 exit 0
