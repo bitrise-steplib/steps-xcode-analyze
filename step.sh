@@ -53,19 +53,15 @@ fi
 if [[ "${is_force_code_sign}" == "yes" ]] ; then
 	echo " (!) Using Force Code Signing mode!"
 
-	set -v
 	xcodebuild ${CONFIG_xcode_project_action} "${project_path}" \
 		-scheme "${scheme}" \
 		${clean_build_param} analyze \
-		-verbose \
 		PROVISIONING_PROFILE="${BITRISE_PROVISIONING_PROFILE_ID}" \
 		CODE_SIGN_IDENTITY="${BITRISE_CODE_SIGN_IDENTITY}"
 else
-	set -v
 	xcodebuild ${CONFIG_xcode_project_action} "${project_path}" \
 		-scheme "${scheme}" \
-		${clean_build_param} analyze \
-		-verbose
+		${clean_build_param} analyze
 fi
 
 exit 0
