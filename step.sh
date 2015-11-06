@@ -27,7 +27,7 @@ fi
 if [ -z "${build_tool}" ] ; then
 	echo "[!] Missing required input: build_tool"
 	exit 1
-elif [ "${build_tool}" != "xctool" ] && [ "${build_tool}" != "xcodebuild" ]; then
+elif [[ "${build_tool}" != "xctool" && "${build_tool}" != "xcodebuild" ]] ; then
 	echo "[!] Invalid build_tool: ${build_tool}"
 	exit 1
 fi
@@ -62,13 +62,21 @@ fi
 if [[ "${is_force_code_sign}" == "yes" ]] ; then
 	echo " (!) Using Force Code Signing mode!"
 
-	"${build_tool}" ${CONFIG_xcode_project_action} "${project_path}" \
+	echo
+	echo
+
+	set -x
+	${build_tool} ${CONFIG_xcode_project_action} "${project_path}" \
 		-scheme "${scheme}" \
 		${clean_build_param} analyze \
 		PROVISIONING_PROFILE="${BITRISE_PROVISIONING_PROFILE_ID}" \
 		CODE_SIGN_IDENTITY="${BITRISE_CODE_SIGN_IDENTITY}"
 else
-	"${build_tool}" ${CONFIG_xcode_project_action} "${project_path}" \
+	echo
+	echo
+
+	set -x
+	${build_tool} ${CONFIG_xcode_project_action} "${project_path}" \
 		-scheme "${scheme}" \
 		${clean_build_param} analyze
 fi
