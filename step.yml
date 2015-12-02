@@ -5,7 +5,7 @@ summary: |-
 description: |-
   Find flaws (potential bugs) in the source code of a project with the
   static analyzer built into Xcode.
-  
+
   Runs Xcode's `analyze` action.
 website: https://github.com/bitrise-io/steps-xcode-analyze
 source_code_url: https://github.com/bitrise-io/steps-xcode-analyze
@@ -23,8 +23,6 @@ is_skippable: false
 deps:
   check_only:
   - name: xcode
-  brew:
-  - name: xctool
 run_if: ""
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
@@ -66,15 +64,6 @@ inputs:
       is_required: true
       is_expand: true
       is_dont_change_value: false
-  - build_tool: "xctool"
-    opts:
-      title: "Build tool"
-      value_options:
-      - "xctool"
-      - "xcodebuild"
-      is_required: true
-      is_expand: false
-      is_dont_change_value: false
   - is_force_code_sign: "no"
     opts:
       title: "Use force code signing attributes?"
@@ -89,6 +78,18 @@ inputs:
       value_options:
         - "yes"
         - "no"
+      is_required: true
+      is_expand: false
+      is_dont_change_value: false
+  - output_tool: xcpretty
+    opts:
+      title: Output tool
+      description: |-
+        If output_tool is set to xcpretty, the xcodebuild output will be prettified by xcpretty.
+        If output_tool is set to xcodebuild, the raw xcodebuild output will be printed.
+      value_options:
+      - xcpretty
+      - xcodebuild
       is_required: true
       is_expand: false
       is_dont_change_value: false
