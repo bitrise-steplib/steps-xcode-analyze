@@ -30,6 +30,7 @@ workflows:
         - is_clean_build: "no"
         - workdir: $PROJECT_WORKDIR
         - output_tool: xcpretty
+        # - output_tool: xcodebuild
 
 
   # ----------------------------------------------------------------

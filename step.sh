@@ -91,8 +91,8 @@ fi
 
 echo
 echo
-echo "analyze command:"
-echo "$analyze_cmd"
+echo "=> Analyze command:"
+echo '$' $analyze_cmd
 
 echo
 eval $analyze_cmd
