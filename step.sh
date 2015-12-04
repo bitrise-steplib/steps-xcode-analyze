@@ -24,19 +24,34 @@ else
 	exit 1
 fi
 
-if [ -z "${build_tool}" ] ; then
-	echo "[!] Missing required input: build_tool"
-	exit 1
-elif [[ "${build_tool}" != "xctool" && "${build_tool}" != "xcodebuild" ]] ; then
-	echo "[!] Invalid build_tool: ${build_tool}"
+if [[ "${output_tool}" != "xcpretty" && "${output_tool}" != "xcodebuild" ]] ; then
+	echo "[!] Invalid output_tool: ${output_tool}"
 	exit 1
 fi
+
+set +e
+
+if [[ "${output_tool}" == "xcpretty" ]] ; then
+	xcpretty_version=$(xcpretty --version)
+	exit_code=$?
+	if [[ $exit_code != 0 || -z $xcpretty_version ]] ; then
+		echo
+		echo " (!) xcpretty is not installed"
+		echo "     For xcpretty installation see: 'https://github.com/supermarin/xcpretty',"
+		echo "     or use 'xcodebuild' as 'output_tool'."
+		echo
+		exit 1
+	fi
+fi
+
+set -e
+
 
 #
 # Print configs
 echo
 echo "========== Configs =========="
-echo " * build_tool: ${build_tool}"
+echo " * output_tool: ${output_tool}"
 echo " * project_path: ${project_path}"
 echo " * scheme: ${scheme}"
 echo " * workdir: ${workdir}"
@@ -59,26 +74,27 @@ if [[ "${is_clean_build}" == "yes" ]] ; then
 fi
 
 
+analyze_cmd="xcodebuild ${CONFIG_xcode_project_action} \"${project_path}\""
+analyze_cmd="$analyze_cmd -scheme \"${scheme}\""
+analyze_cmd="$analyze_cmd ${clean_build_param} analyze"
+
 if [[ "${is_force_code_sign}" == "yes" ]] ; then
 	echo " (!) Using Force Code Signing mode!"
 
-	echo
-	echo
-
-	set -x
-	${build_tool} ${CONFIG_xcode_project_action} "${project_path}" \
-		-scheme "${scheme}" \
-		${clean_build_param} analyze \
-		PROVISIONING_PROFILE="${BITRISE_PROVISIONING_PROFILE_ID}" \
-		CODE_SIGN_IDENTITY="${BITRISE_CODE_SIGN_IDENTITY}"
-else
-	echo
-	echo
-
-	set -x
-	${build_tool} ${CONFIG_xcode_project_action} "${project_path}" \
-		-scheme "${scheme}" \
-		${clean_build_param} analyze
+	analyze_cmd="$analyze_cmd PROVISIONING_PROFILE=\"${BITRISE_PROVISIONING_PROFILE_ID}\""
+	analyze_cmd="$analyze_cmd CODE_SIGN_IDENTITY=\"${BITRISE_CODE_SIGN_IDENTITY}\""
 fi
+
+if [[ "${output_tool}" == "xcpretty" ]] ; then
+	analyze_cmd="set -o pipefail && $analyze_cmd | xcpretty"
+fi
+
+echo
+echo
+echo "analyze command:"
+echo "$analyze_cmd"
+
+echo
+eval $analyze_cmd
 
 exit 0
