@@ -75,15 +75,13 @@ if [ ! -z "${workdir}" ] ; then
 	cd "${workdir}"
 fi
 
-clean_build_param=''
-if [[ "${is_clean_build}" == "yes" ]] ; then
-	clean_build_param='clean'
-fi
-
 
 analyze_cmd="xcodebuild ${CONFIG_xcode_project_action} \"${project_path}\""
 analyze_cmd="$analyze_cmd -scheme \"${scheme}\""
-analyze_cmd="$analyze_cmd ${clean_build_param} analyze"
+if [[ "${is_clean_build}" == "yes" ]] ; then
+	analyze_cmd="$analyze_cmd clean"
+fi
+analyze_cmd="$analyze_cmd analyze"
 
 if [[ "${is_force_code_sign}" == "yes" ]] ; then
 	echo " (!) Using Force Code Signing mode!"
@@ -99,7 +97,7 @@ fi
 echo
 echo
 echo "=> Analyze command:"
-echo '$' $analyze_cmd
+echo "'$' $analyze_cmd"
 
 echo
 eval $analyze_cmd
