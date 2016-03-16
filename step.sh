@@ -129,7 +129,7 @@ fi
 
 #
 # Main
-echo_info "Analyzing the project ..."
+echo_info "Analyzing the project..."
 
 analyze_cmd="xcodebuild ${CONFIG_xcode_project_action} \"${project_path}\""
 analyze_cmd="$analyze_cmd -scheme \"${scheme}\""
