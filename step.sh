@@ -96,6 +96,18 @@ validate_required_input "output_tool" $output_tool
 options=("xcpretty"  "xcodebuild")
 validate_required_input_with_options "output_tool" $output_tool "${options[@]}"
 
+echo
+
+# xcodebuild version
+out=$(xcodebuild -version)
+
+IFS=$'\n'
+xcodebuild_version_split=($out)
+unset IFS
+
+xcodebuild_version="${xcodebuild_version_split[0]} (${xcodebuild_version_split[1]})"
+echo_details "* xcodebuild_version: $xcodebuild_version"
+
 # Detect xcpretty version
 xcpretty_version=""
 if [[ "${output_tool}" == "xcpretty" ]] ; then
