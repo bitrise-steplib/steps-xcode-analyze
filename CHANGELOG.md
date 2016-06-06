@@ -1,6 +1,14 @@
-## Changelog (Current version: 1.5.1)
+## Changelog (Current version: 1.6.0)
 
 -----------------
+
+### 1.6.0 (2016 Jun 06)
+
+* [1912f0a] prepare for 1.6.0
+* [4c0f485] Merge pull request #10 from bitrise-io/force_sign
+* [41cfd3c] force code sign
+* [2e2de19] Merge pull request #9 from bitrise-io/xcodebuild_version
+* [32087ee] print xcodebuild version
 
 ### 1.5.1 (2016 Mar 16)
 
@@ -58,4 +66,4 @@
 
 -----------------
 
-Updated: 2016 Mar 16
+Updated: 2016 Jun 06
