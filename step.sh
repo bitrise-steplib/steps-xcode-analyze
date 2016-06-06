@@ -84,13 +84,13 @@ echo_details "* workdir: $workdir"
 echo_details "* project_path: $project_path"
 echo_details "* scheme: $scheme"
 echo_details "* is_clean_build: $is_clean_build"
-echo_details "* is_force_code_sign: $is_force_code_sign"
+echo_details "* force_provisioning_profile: $force_provisioning_profile"
+echo_details "* force_code_sign_identity: $force_code_sign_identity"
 echo_details "* output_tool: $output_tool"
 
 validate_required_input "project_path" $project_path
 validate_required_input "scheme" $scheme
 validate_required_input "is_clean_build" $is_clean_build
-validate_required_input "is_force_code_sign" $is_force_code_sign
 validate_required_input "output_tool" $output_tool
 
 options=("xcpretty"  "xcodebuild")
@@ -150,11 +150,16 @@ if [[ "${is_clean_build}" == "yes" ]] ; then
 fi
 analyze_cmd="$analyze_cmd analyze"
 
-if [[ "${is_force_code_sign}" == "yes" ]] ; then
-	echo_details "Using Force Code Signing mode!"
+if [[ -n "${force_code_sign_identity}" ]] ; then
+	echo_details "Forcing Code Signing Identity: ${force_code_sign_identity}"
 
-	analyze_cmd="$analyze_cmd PROVISIONING_PROFILE=\"${BITRISE_PROVISIONING_PROFILE_ID}\""
-	analyze_cmd="$analyze_cmd CODE_SIGN_IDENTITY=\"${BITRISE_CODE_SIGN_IDENTITY}\""
+	analyze_cmd="$analyze_cmd CODE_SIGN_IDENTITY=\"${force_code_sign_identity}\""
+fi
+
+if [[ -n "${force_provisioning_profile}" ]] ; then
+	echo_details "Forcing Provisioning Profile: ${force_provisioning_profile}"
+
+	analyze_cmd="$analyze_cmd PROVISIONING_PROFILE=\"${force_provisioning_profile}\""
 fi
 
 if [[ "${output_tool}" == "xcpretty" ]] ; then
