@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -49,7 +49,7 @@ function echo_done {
 function validate_required_input {
 	key=$1
 	value=$2
-	if [ -z "${value}" ] ; then
+	if [[ -z "${value}" ]] ; then
 		echo_fail "[!] Missing required input: ${key}"
 	fi
 }
@@ -63,12 +63,13 @@ function validate_required_input_with_options {
 
 	found="0"
 	for option in "${options[@]}" ; do
-		if [ "${option}" == "${value}" ] ; then
+		if [[ "${option}" == "${value}" ]] ; then
 			found="1"
+      break
 		fi
 	done
 
-	if [ "${found}" == "0" ] ; then
+	if [[ "${found}" == "0" ]] ; then
 		echo_fail "Invalid input: (${key}) value: (${value}), valid options: ($( IFS=$", "; echo "${options[*]}" ))"
 	fi
 }
@@ -86,6 +87,7 @@ echo_details "* scheme: $scheme"
 echo_details "* is_clean_build: $is_clean_build"
 echo_details "* force_provisioning_profile: $force_provisioning_profile"
 echo_details "* force_code_sign_identity: $force_code_sign_identity"
+echo_details "* disable_codesign: $disable_codesign"
 echo_details "* output_tool: $output_tool"
 
 validate_required_input "project_path" $project_path
@@ -134,7 +136,7 @@ fi
 echo_details "* CONFIG_xcode_project_action: $CONFIG_xcode_project_action"
 
 # work dir
-if [ ! -z "${workdir}" ] ; then
+if [[ ! -z "${workdir}" ]] ; then
 	echo_info "Switching to working directory: ${workdir}"
 	cd "${workdir}"
 fi
@@ -160,6 +162,12 @@ if [[ -n "${force_provisioning_profile}" ]] ; then
 	echo_details "Forcing Provisioning Profile: ${force_provisioning_profile}"
 
 	analyze_cmd="$analyze_cmd PROVISIONING_PROFILE=\"${force_provisioning_profile}\""
+fi
+
+if [[ "${disable_codesign}" == "yes" ]] ; then
+	echo_details "Disable Code Signing"
+
+	analyze_cmd="$analyze_cmd CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO"
 fi
 
 if [[ "${output_tool}" == "xcpretty" ]] ; then

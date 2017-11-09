@@ -90,6 +90,14 @@ inputs:
         Format example:
 
         - c5be4123-1234-4f9d-9843-0d9be985a068
+  - disable_codesign: "no"
+    opts:
+      title: "Disable Code Signing"
+      description: |-
+        In order to skip the code signing set this option to `yes`.
+      value_options:
+      - "yes"
+      - "no"
   - output_tool: xcpretty
     opts:
       title: Output tool
