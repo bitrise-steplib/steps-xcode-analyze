@@ -90,7 +90,7 @@ inputs:
         Format example:
 
         - c5be4123-1234-4f9d-9843-0d9be985a068
-  - disable_codesign: "no"
+  - disable_codesign: "yes"
     opts:
       title: "Disable Code Signing"
       description: |-
