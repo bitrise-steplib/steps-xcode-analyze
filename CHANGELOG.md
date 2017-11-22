@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.6.1)
+## Changelog (Current version: 1.7.0)
 
 -----------------
+
+### 1.7.0 (2017 Nov 22)
+
+* [7d63d39] Bump version to 1.7.0
+* [4c50d48] Add option to disable codesign (#12)
 
 ### 1.6.1 (2016 Dec 19)
 
@@ -71,4 +76,4 @@
 
 -----------------
 
-Updated: 2016 Dec 19
+Updated: 2017 Nov 22
