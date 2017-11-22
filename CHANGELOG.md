@@ -1,6 +1,13 @@
-## Changelog (Current version: 1.7.0)
+## Changelog (Current version: 1.7.1)
 
 -----------------
+
+### 1.7.1 (2017 Nov 22)
+
+* [055adee] Bump version to 1.7.1
+* [558dd6f] Merge pull request #13 from bitrise-io/type-tags
+* [b297a61] remove 'build' type_tag
+* [0ad360b] Update project_type_tags and type_tags
 
 ### 1.7.0 (2017 Nov 22)
 
