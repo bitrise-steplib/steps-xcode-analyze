@@ -10,6 +10,7 @@ description: |-
 website: https://github.com/bitrise-io/steps-xcode-analyze
 source_code_url: https://github.com/bitrise-io/steps-xcode-analyze
 support_url: https://github.com/bitrise-io/steps-xcode-analyze/issues
+
 host_os_tags:
   - "osx-10.10"
 project_type_tags:
@@ -20,13 +21,20 @@ project_type_tags:
   - ionic
 type_tags:
   - test
+
 is_requires_admin_user: false
 is_always_run: false
 is_skippable: false
+
 deps:
   check_only:
   - name: xcode
-run_if: ""
+  brew:
+  - name: go
+toolkit:
+  go:
+    package_name: github.com/bitrise-io/steps-xcode-analyze
+
 inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:
@@ -102,6 +110,7 @@ inputs:
       - "no"
   - output_tool: xcpretty
     opts:
+      category: Debug
       title: Output tool
       description: |-
         If output_tool is set to xcpretty, the xcodebuild output will be prettified by xcpretty.
@@ -112,4 +121,19 @@ inputs:
       is_required: true
       is_expand: false
       is_dont_change_value: false
-outputs: []
+  - output_dir: $BITRISE_DEPLOY_DIR
+    opts:
+      category: Debug
+      title: Output directory path
+      summary: Output directory path"
+      description: This directory will contain the generated raw-xcodebuild-output.log.
+      is_required: true
+  - verbose_log: "yes"
+    opts:
+      category: Debug
+      title: "Enable verbose logging?"
+      description: Enable verbose logging?
+      is_required: true
+      value_options:
+      - "yes"
+      - "no"
