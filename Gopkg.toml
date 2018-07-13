@@ -1,8 +1,4 @@
 [[constraint]]
-  name = "github.com/bitrise-io/steps-xcode-archive"
-  version = "2.4.9"
-
-[[constraint]]
   branch = "master"
   name = "github.com/bitrise-tools/go-steputils"
 
@@ -16,4 +12,4 @@
 
 [[constraint]]
   name = "github.com/bitrise-tools/go-xcode"
-  revision = "2bf5450263c607455557eeda2a982d00635b9c05"
+  branch = "master"

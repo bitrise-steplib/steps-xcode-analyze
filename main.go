@@ -12,6 +12,7 @@ import (
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/steps-xcode-analyze/utils"
 	"github.com/bitrise-tools/go-steputils/stepconf"
+	"github.com/bitrise-tools/go-xcode/utility"
 	"github.com/bitrise-tools/go-xcode/xcodebuild"
 	"github.com/bitrise-tools/go-xcode/xcpretty"
 )
@@ -48,35 +49,48 @@ func main() {
 	fmt.Println()
 	log.Infof("Step determined configs:")
 
-	// detect Xcode version
-	xcVersion, err := xcodeVersion()
+	// Detect Xcode major version
+	xcodebuildVersion, err := utility.GetXcodeVersion()
 	if err != nil {
-		fail("Failed to get Xcode version - %s", err)
+		fail("Failed to determin xcode version, error: %s", err)
 	}
-	log.Printf(xcVersion)
+	log.Printf("- xcodebuildVersion: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
+
+	xcodeMajorVersion := xcodebuildVersion.MajorVersion
+	if xcodeMajorVersion < minSupportedXcodeMajorVersion {
+		fail("Invalid xcode major version (%d), should not be less then min supported: %d", xcodeMajorVersion, minSupportedXcodeMajorVersion)
+	}
 
 	// Detect xcpretty version
-	if conf.OutputTool == "xcpretty" {
+	outputTool := conf.OutputTool
+	if outputTool == "xcpretty" {
 		fmt.Println()
-		log.Infof("Checking output tool")
-		installed, err := utils.IsXcprettyInstalled()
+		log.Infof("Checking if output tool (xcpretty) is installed")
+
+		installed, err := xcpretty.IsInstalled()
 		if err != nil {
-			fail("Failed to check if xcpretty is installed, error: %s", err)
-		}
-
-		if !installed {
-			log.Warnf(`🚨  xcpretty is not installed`)
-
+			log.Warnf("Failed to check if xcpretty is installed, error: %s", err)
+			log.Printf("Switching to xcodebuild for output tool")
+			outputTool = "xcodebuild"
+		} else if !installed {
+			log.Warnf(`xcpretty is not installed`)
 			fmt.Println()
 			log.Printf("Installing xcpretty")
-			if err := utils.InstallXcpretty(); err != nil {
-				fail("Failed to install xcpretty, error: %s", err)
+
+			if err := xcpretty.Install(); err != nil {
+				log.Warnf("Failed to install xcpretty, error: %s", err)
+				log.Printf("Switching to xcodebuild for output tool")
+				outputTool = "xcodebuild"
 			}
 		}
+	}
 
-		xcprettyVersion, err := utils.XcprettyVersion()
+	if outputTool == "xcpretty" {
+		xcprettyVersion, err := xcpretty.Version()
 		if err != nil {
-			fail("Failed to determin xcpretty version, error: %s", err)
+			log.Warnf("Failed to determin xcpretty version, error: %s", err)
+			log.Printf("Switching to xcodebuild for output tool")
+			outputTool = "xcodebuild"
 		}
 		log.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
 	}
@@ -122,7 +136,7 @@ func main() {
 		analyzeCmd.SetDisableCodesign(true)
 	}
 
-	if conf.OutputTool == "xcpretty" {
+	if outputTool == "xcpretty" {
 		xcprettyCmd := xcpretty.New(analyzeCmd)
 
 		logWithTimestamp(colorstring.Green, "$ %s", xcprettyCmd.PrintableCmd())
@@ -154,21 +168,6 @@ The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in
 			fail("Analyze failed, error: %s", err)
 		}
 	}
-}
-
-func xcodeVersion() (string, error) {
-	// Detect Xcode major version
-	xcodebuildVersion, err := utils.XcodeBuildVersion()
-	if err != nil {
-		return "", fmt.Errorf("failed to determin xcode version, error: %s", err)
-	}
-
-	xcodeMajorVersion := xcodebuildVersion.XcodeVersion.Segments()[0]
-	if xcodeMajorVersion < minSupportedXcodeMajorVersion {
-		return "", fmt.Errorf("invalid xcode major version (%d), should not be less then min supported: %d", xcodeMajorVersion, minSupportedXcodeMajorVersion)
-	}
-
-	return fmt.Sprintf("- xcodebuildVersion: %s (%s)", xcodebuildVersion.XcodeVersion.String(), xcodebuildVersion.BuildVersion), nil
 }
 
 func fail(format string, v ...interface{}) {
