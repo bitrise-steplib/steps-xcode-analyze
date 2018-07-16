@@ -10,7 +10,7 @@ import (
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/bitrise-io/steps-xcode-analyze/utils"
+	"github.com/bitrise-io/steps-xcode-archive/utils"
 	"github.com/bitrise-tools/go-steputils/stepconf"
 	"github.com/bitrise-tools/go-xcode/utility"
 	"github.com/bitrise-tools/go-xcode/xcodebuild"
@@ -40,9 +40,9 @@ type Config struct {
 func main() {
 	var conf Config
 	if err := stepconf.Parse(&conf); err != nil {
-		log.Errorf("Error: %s\n", err)
-		os.Exit(1)
+		fail("Failed to parse configs, error: %s", err)
 	}
+
 	stepconf.Print(conf)
 	log.SetEnableDebugLog(conf.VerboseLog)
 
@@ -52,7 +52,7 @@ func main() {
 	// Detect Xcode major version
 	xcodebuildVersion, err := utility.GetXcodeVersion()
 	if err != nil {
-		fail("Failed to determin xcode version, error: %s", err)
+		fail("Failed to determine xcode version, error: %s", err)
 	}
 	log.Printf("- xcodebuildVersion: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
 

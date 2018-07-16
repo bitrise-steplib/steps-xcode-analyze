@@ -13,10 +13,18 @@
     "log",
     "parseutil",
     "pathutil",
+    "pkcs12",
+    "pkcs12/internal/rc2",
     "pointers",
     "stringutil"
   ]
   revision = "d1de0dbcb811588e61362aff67bb700b93c13c17"
+
+[[projects]]
+  name = "github.com/bitrise-io/steps-xcode-archive"
+  packages = ["utils"]
+  revision = "3c94dfa939317abb001184d4fd98b6f5fa3544e7"
+  version = "2.4.9"
 
 [[projects]]
   branch = "master"
@@ -28,7 +36,11 @@
   branch = "master"
   name = "github.com/bitrise-tools/go-xcode"
   packages = [
+    "certificateutil",
+    "exportoptions",
     "models",
+    "plistutil",
+    "profileutil",
     "utility",
     "xcodebuild",
     "xcpretty"
@@ -37,13 +49,37 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/fullsailor/pkcs7"
+  packages = ["."]
+  revision = "8306686428a5fe132eac8cb7c4848af725098bd4"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   revision = "23480c0665776210b5fbbac6eaaee40e3e6a96b7"
 
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/ryanuber/go-glob"
+  packages = ["."]
+  revision = "256dc444b735e061061cf46c809487313d5b0065"
+
+[[projects]]
+  branch = "master"
+  name = "howett.net/plist"
+  packages = ["."]
+  revision = "500bd5b9081b5957ac10389f86e069869f00c348"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "63120b0585f0e40b07c73d30856857a93f2b24219d7b93d77da44fdc76228b98"
+  inputs-digest = "d4a13e55faeffd4b3b404b651fa18b56294c5bc84f2301f77eba08fddc0aa16d"
   solver-name = "gps-cdcl"
   solver-version = 1

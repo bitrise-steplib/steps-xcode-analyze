@@ -125,7 +125,7 @@ inputs:
     opts:
       category: Debug
       title: Output directory path
-      summary: Output directory path"
+      summary: Output directory path
       description: This directory will contain the generated raw-xcodebuild-output.log.
       is_required: true
   - verbose_log: "yes"
