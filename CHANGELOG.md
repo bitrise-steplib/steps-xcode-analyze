@@ -1,6 +1,10 @@
-## Changelog (Current version: 1.7.2)
+## Changelog (Current version: 2.0.0)
 
 -----------------
+
+### 2.0.0 (2018 Jul 18)
+
+* [6296b97] Prepare for 2.0.0
 
 ### 1.7.2 (2018 Jul 18)
 
