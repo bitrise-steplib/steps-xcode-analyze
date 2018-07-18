@@ -42,12 +42,34 @@ workflows:
             set -v
             git clone $SAMPLE_APP_URL .
     - path::./:
+        title: Test - xcodebuild output
+        inputs:
+        - is_force_code_sign: "no"
+        - is_clean_build: "no"
+        - workdir: $PROJECT_WORKDIR
+        - output_tool: xcodebuild
+        - force_code_sign_identity: $BITRISE_CODE_SIGN_IDENTITY
+        - force_provisioning_profile: $BITRISE_PROVISIONING_PROFILE_ID
+    - change-workdir:
+        title: Switch working dir to _tmp dir
+        run_if: true
+        inputs:
+        - path: "./_tmp"
+        - is_create_path: true
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/bash
+            set -e
+            set -v
+            git clone $SAMPLE_APP_URL .
+    - path::./:
+        title: Test - xcpretty output
         inputs:
         - is_force_code_sign: "no"
         - is_clean_build: "no"
         - workdir: $PROJECT_WORKDIR
         - output_tool: xcpretty
-        # - output_tool: xcodebuild
         - force_code_sign_identity: $BITRISE_CODE_SIGN_IDENTITY
         - force_provisioning_profile: $BITRISE_PROVISIONING_PROFILE_ID
 
