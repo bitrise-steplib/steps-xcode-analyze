@@ -1,6 +1,11 @@
-## Changelog (Current version: 1.7.1)
+## Changelog (Current version: 1.7.2)
 
 -----------------
+
+### 1.7.2 (2018 Jul 18)
+
+* [02e3590] Prepare for 1.7.2
+* [37b18fd] Rewrite in go + xcpretty check (#16)
 
 ### 1.7.1 (2017 Nov 22)
 
@@ -83,4 +88,4 @@
 
 -----------------
 
-Updated: 2017 Nov 22
+Updated: 2018 Jul 18
