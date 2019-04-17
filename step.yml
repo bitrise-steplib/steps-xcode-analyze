@@ -7,9 +7,9 @@ description: |-
   static analyzer built into Xcode.
 
   Runs Xcode's `analyze` action.
-website: https://github.com/bitrise-io/steps-xcode-analyze
-source_code_url: https://github.com/bitrise-io/steps-xcode-analyze
-support_url: https://github.com/bitrise-io/steps-xcode-analyze/issues
+website: https://github.com/bitrise-steplib/steps-xcode-analyze
+source_code_url: https://github.com/bitrise-steplib/steps-xcode-analyze
+support_url: https://github.com/bitrise-steplib/steps-xcode-analyze/issues
 
 host_os_tags:
   - "osx-10.10"
@@ -33,7 +33,7 @@ deps:
   - name: go
 toolkit:
   go:
-    package_name: github.com/bitrise-io/steps-xcode-analyze
+    package_name: github.com/bitrise-steplib/steps-xcode-analyze
 
 inputs:
   - workdir: $BITRISE_SOURCE_DIR

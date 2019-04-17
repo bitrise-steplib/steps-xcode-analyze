@@ -98,7 +98,7 @@ workflows:
         - content: |
             #!/bin/bash
             set -ex
-            go get -u github.com/bitrise-tools/releaseman
+            go get -u github.com/bitrise-io/releaseman
             export CI=true
             releaseman create --version "$BITRISE_STEP_VERSION"
             
@@ -119,7 +119,7 @@ workflows:
       - MY_STEPLIB_REPO_FORK_GIT_URL: $MY_STEPLIB_REPO_FORK_GIT_URL
       - BITRISE_STEP_ID: xcode-analyze
       - BITRISE_STEP_VERSION: $BITRISE_STEP_VERSION
-      - BITRISE_STEP_GIT_CLONE_URL: https://github.com/bitrise-io/steps-xcode-analyze.git
+      - BITRISE_STEP_GIT_CLONE_URL: https://github.com/bitrise-steplib/steps-xcode-analyze.git
     description: |-
       If this is the first time you try to share a Step you should
       first call: $ bitrise share

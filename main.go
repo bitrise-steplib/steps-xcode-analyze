@@ -6,15 +6,16 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/colorstring"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/bitrise-io/steps-xcode-archive/utils"
-	"github.com/bitrise-tools/go-steputils/stepconf"
-	"github.com/bitrise-tools/go-xcode/utility"
-	"github.com/bitrise-tools/go-xcode/xcodebuild"
-	"github.com/bitrise-tools/go-xcode/xcpretty"
+	"github.com/bitrise-io/go-xcode/utility"
+	"github.com/bitrise-io/go-xcode/xcodebuild"
+	"github.com/bitrise-io/go-xcode/xcpretty"
+	"github.com/bitrise-steplib/steps-xcode-archive/utils"
 )
 
 const (
@@ -77,10 +78,22 @@ func main() {
 			fmt.Println()
 			log.Printf("Installing xcpretty")
 
-			if err := xcpretty.Install(); err != nil {
-				log.Warnf("Failed to install xcpretty, error: %s", err)
-				log.Printf("Switching to xcodebuild for output tool")
+			if cmds, err := xcpretty.Install(); err != nil {
+				log.Warnf("Failed to create xcpretty install command: %s", err)
+				log.Warnf("Switching to xcodebuild for output tool")
 				outputTool = "xcodebuild"
+			} else {
+				for _, cmd := range cmds {
+					if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+						if errorutil.IsExitStatusError(err) {
+							log.Warnf("%s failed: %s", out)
+						} else {
+							log.Warnf("%s failed: %s", err)
+						}
+						log.Warnf("Switching to xcodebuild for output tool")
+						outputTool = "xcodebuild"
+					}
+				}
 			}
 		}
 	}
