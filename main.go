@@ -25,15 +25,16 @@ const (
 
 // Config ...
 type Config struct {
-	Workdir                  string `env:"workdir"`
-	ProjectPath              string `env:"project_path,required"`
-	Scheme                   string `env:"scheme,required"`
-	IsCleanBuild             bool   `env:"is_clean_build,opt[yes,no]"`
-	ForceProvisioningProfile string `env:"force_provisioning_profile"`
-	ForceCodeSignIdentity    string `env:"force_code_sign_identity"`
-	DisableCodesign          bool   `env:"disable_codesign,opt[yes,no]"`
-	OutputTool               string `env:"output_tool,opt[xcpretty,xcodebuild]"`
-	OutputDir                string `env:"output_dir,dir"`
+	Workdir                   string `env:"workdir"`
+	ProjectPath               string `env:"project_path,required"`
+	Scheme                    string `env:"scheme,required"`
+	IsCleanBuild              bool   `env:"is_clean_build,opt[yes,no]"`
+	ForceProvisioningProfile  string `env:"force_provisioning_profile"`
+	ForceCodeSignIdentity     string `env:"force_code_sign_identity"`
+	DisableCodesign           bool   `env:"disable_codesign,opt[yes,no]"`
+	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
+	OutputTool                string `env:"output_tool,opt[xcpretty,xcodebuild]"`
+	OutputDir                 string `env:"output_dir,dir"`
 
 	VerboseLog bool `env:"verbose_log,opt[yes,no]"`
 }
@@ -143,6 +144,8 @@ func main() {
 	}
 
 	analyzeCmd := xcodebuild.NewCommandBuilder(conf.ProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
+
+	analyzeCmd.SetDisableIndexWhileBuilding(conf.DisableIndexWhileBuilding)
 	analyzeCmd.SetScheme(conf.Scheme)
 
 	if conf.DisableCodesign {
