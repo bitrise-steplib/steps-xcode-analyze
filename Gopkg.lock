@@ -32,7 +32,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2c88cfdfc29121d22cf182b785a42335163971541f79237c21ac9773e77b0566"
+  digest = "1:6733169da885fd499105aac25fe5826ab67f95c67a5fe702824a9a567c4d90e5"
   name = "github.com/bitrise-io/go-xcode"
   packages = [
     "certificateutil",
@@ -45,7 +45,7 @@
     "xcpretty",
   ]
   pruneopts = "UT"
-  revision = "04a02fcd3c06c698d47ce4e27dbe105d6ea8eadc"
+  revision = "a49d262bd2151997b9b18f882654eae3aab31a9d"
 
 [[projects]]
   branch = "master"
@@ -67,7 +67,7 @@
   name = "github.com/bitrise-steplib/steps-xcode-archive"
   packages = ["utils"]
   pruneopts = "UT"
-  revision = "23665685d131c54fa4bc16294d529a900f45bca6"
+  revision = "95e00f357cea01ff520b5103bc9a5a3da2055e32"
 
 [[projects]]
   branch = "master"
@@ -78,12 +78,12 @@
   revision = "d7302db945fa6ea264fb79d8e13e931ea514a602"
 
 [[projects]]
-  digest = "1:950caca7dfcf796419232ba996c9c3539d09f26af27ba848c4508e604c13efbb"
+  digest = "1:88e0b0baeb9072f0a4afbcf12dda615fc8be001d1802357538591155998da21b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d40cf49b3a77bba84a7afdbd7f1dc295d114efb1"
-  version = "v1.1.0"
+  revision = "ac23dc3fea5d1a983c43f6a0f6e2c13f0195d8bd"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -130,6 +130,7 @@
   input-imports = [
     "github.com/bitrise-io/go-steputils/stepconf",
     "github.com/bitrise-io/go-utils/colorstring",
+    "github.com/bitrise-io/go-utils/errorutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",
     "github.com/bitrise-io/go-utils/stringutil",
