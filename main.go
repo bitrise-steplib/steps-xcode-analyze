@@ -6,15 +6,16 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-utils/colorstring"
+	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/bitrise-io/steps-xcode-archive/utils"
-	"github.com/bitrise-tools/go-steputils/stepconf"
-	"github.com/bitrise-tools/go-xcode/utility"
-	"github.com/bitrise-tools/go-xcode/xcodebuild"
-	"github.com/bitrise-tools/go-xcode/xcpretty"
+	"github.com/bitrise-io/go-xcode/utility"
+	"github.com/bitrise-io/go-xcode/xcodebuild"
+	"github.com/bitrise-io/go-xcode/xcpretty"
+	"github.com/bitrise-steplib/steps-xcode-archive/utils"
 )
 
 const (
@@ -24,15 +25,16 @@ const (
 
 // Config ...
 type Config struct {
-	Workdir                  string `env:"workdir"`
-	ProjectPath              string `env:"project_path,required"`
-	Scheme                   string `env:"scheme,required"`
-	IsCleanBuild             bool   `env:"is_clean_build,opt[yes,no]"`
-	ForceProvisioningProfile string `env:"force_provisioning_profile"`
-	ForceCodeSignIdentity    string `env:"force_code_sign_identity"`
-	DisableCodesign          bool   `env:"disable_codesign,opt[yes,no]"`
-	OutputTool               string `env:"output_tool,opt[xcpretty,xcodebuild]"`
-	OutputDir                string `env:"output_dir,dir"`
+	Workdir                   string `env:"workdir"`
+	ProjectPath               string `env:"project_path,required"`
+	Scheme                    string `env:"scheme,required"`
+	IsCleanBuild              bool   `env:"is_clean_build,opt[yes,no]"`
+	ForceProvisioningProfile  string `env:"force_provisioning_profile"`
+	ForceCodeSignIdentity     string `env:"force_code_sign_identity"`
+	DisableCodesign           bool   `env:"disable_codesign,opt[yes,no]"`
+	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
+	OutputTool                string `env:"output_tool,opt[xcpretty,xcodebuild]"`
+	OutputDir                 string `env:"output_dir,dir"`
 
 	VerboseLog bool `env:"verbose_log,opt[yes,no]"`
 }
@@ -77,10 +79,22 @@ func main() {
 			fmt.Println()
 			log.Printf("Installing xcpretty")
 
-			if err := xcpretty.Install(); err != nil {
-				log.Warnf("Failed to install xcpretty, error: %s", err)
-				log.Printf("Switching to xcodebuild for output tool")
+			if cmds, err := xcpretty.Install(); err != nil {
+				log.Warnf("Failed to create xcpretty install command: %s", err)
+				log.Warnf("Switching to xcodebuild for output tool")
 				outputTool = "xcodebuild"
+			} else {
+				for _, cmd := range cmds {
+					if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
+						if errorutil.IsExitStatusError(err) {
+							log.Warnf("%s failed: %s", out)
+						} else {
+							log.Warnf("%s failed: %s", err)
+						}
+						log.Warnf("Switching to xcodebuild for output tool")
+						outputTool = "xcodebuild"
+					}
+				}
 			}
 		}
 	}
@@ -130,6 +144,8 @@ func main() {
 	}
 
 	analyzeCmd := xcodebuild.NewCommandBuilder(conf.ProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
+
+	analyzeCmd.SetDisableIndexWhileBuilding(conf.DisableIndexWhileBuilding)
 	analyzeCmd.SetScheme(conf.Scheme)
 
 	if conf.DisableCodesign {

@@ -1,6 +1,6 @@
 [[constraint]]
   branch = "master"
-  name = "github.com/bitrise-tools/go-steputils"
+  name = "github.com/bitrise-io/go-steputils"
 
 [prune]
   go-tests = true
@@ -11,5 +11,5 @@
   name = "github.com/bitrise-io/go-utils"
 
 [[constraint]]
-  name = "github.com/bitrise-tools/go-xcode"
+  name = "github.com/bitrise-steplib/steps-xcode-archive"
   branch = "master"
