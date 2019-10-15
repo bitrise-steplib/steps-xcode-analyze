@@ -19,6 +19,7 @@ project_type_tags:
   - react-native
   - cordova
   - ionic
+  - flutter
 type_tags:
   - test
 
