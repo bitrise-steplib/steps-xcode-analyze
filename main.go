@@ -51,6 +51,11 @@ func main() {
 	fmt.Println()
 	log.Infof("Step determined configs:")
 
+	absProjectPath, err := filepath.Abs(conf.ProjectPath)
+	if err != nil {
+		fail("Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
+	}
+
 	// Detect Xcode major version
 	xcodebuildVersion, err := utility.GetXcodeVersion()
 	if err != nil {
@@ -134,7 +139,7 @@ func main() {
 	log.Infof("Analyzing the project")
 
 	isWorkspace := false
-	ext := filepath.Ext(conf.ProjectPath)
+	ext := filepath.Ext(absProjectPath)
 	if ext == ".xcodeproj" {
 		isWorkspace = false
 	} else if ext == ".xcworkspace" {
@@ -143,7 +148,7 @@ func main() {
 		fail("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
 	}
 
-	analyzeCmd := xcodebuild.NewCommandBuilder(conf.ProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
+	analyzeCmd := xcodebuild.NewCommandBuilder(absProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
 
 	analyzeCmd.SetDisableIndexWhileBuilding(conf.DisableIndexWhileBuilding)
 	analyzeCmd.SetScheme(conf.Scheme)
