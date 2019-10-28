@@ -44,12 +44,12 @@ workflows:
     - script:
         title: Remove temporary directory
         inputs:
-        - content: rm -rf "$ORIG_BITRISE_SOURCE_DIR/_tmp"
+        - content: rm -rf "$BITRISE_SOURCE_DIR/_tmp"
     - change-workdir:
         title: Switch working dir to _tmp dir
         run_if: true
         inputs:
-        - path: "$ORIG_BITRISE_SOURCE_DIR/_tmp"
+        - path: "$BITRISE_SOURCE_DIR/_tmp"
         - is_create_path: true
     - script:
         inputs:
