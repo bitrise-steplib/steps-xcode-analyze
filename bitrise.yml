@@ -14,15 +14,33 @@ workflows:
   # ----------------------------------------------------------------
   # --- workflow to Step Test
   test:
-    envs:
-    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-simple-objc.git
-    - BITRISE_PROJECT_PATH: ios-simple-objc/ios-simple-objc.xcodeproj
-    - BITRISE_SCHEME: ios-simple-objc
     steps:
     - go-list:
     - golint:
     - errcheck:
     - go-test:
+    after_run:    
+    - test_objc
+    - test_swiftpm
+
+  test_objc:
+    envs:
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-simple-objc.git
+    - BITRISE_PROJECT_PATH: ios-simple-objc/ios-simple-objc.xcodeproj
+    - BITRISE_SCHEME: ios-simple-objc
+    after_run:
+    - _run_and_test_output
+
+  test_swiftpm:
+    envs:
+    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
+    - BITRISE_PROJECT_PATH: sample-swiftpm.xcodeproj
+    - BITRISE_SCHEME: "sample swiftpm"
+    after_run:
+    - _run_and_test_output
+
+  _run_and_test_output:
+    steps:
     - script:
         title: Remove temporary directory
         inputs:

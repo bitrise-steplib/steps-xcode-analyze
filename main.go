@@ -33,6 +33,7 @@ type Config struct {
 	ForceCodeSignIdentity     string `env:"force_code_sign_identity"`
 	DisableCodesign           bool   `env:"disable_codesign,opt[yes,no]"`
 	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
+	CacheLevel                string `env:"cache_level,opt[none,swift_packages]"`
 	OutputTool                string `env:"output_tool,opt[xcpretty,xcodebuild]"`
 	OutputDir                 string `env:"output_dir,dir"`
 
@@ -180,6 +181,13 @@ func main() {
 			}
 		}
 		fail("Analyze failed, error: %s", err)
+	}
+
+	// Cache swift PM
+	if xcodeMajorVersion >= 11 && conf.CacheLevel == "swift_packages" {
+		if err := cache.CollectSwiftPackages(absProjectPath); err != nil {
+			log.Warnf("Failed to mark swift packages for caching, error: %s", err)
+		}
 	}
 }
 
