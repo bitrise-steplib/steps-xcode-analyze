@@ -61,7 +61,6 @@ workflows:
     - path::./:
         title: Test - xcodebuild output
         inputs:
-        - is_force_code_sign: "no"
         - is_clean_build: "no"
         - workdir: $PROJECT_WORKDIR
         - output_tool: xcodebuild
