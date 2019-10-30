@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
-	"github.com/bitrise-io/go-utils/colorstring"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/go-xcode/utility"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
+	cache "github.com/bitrise-io/go-xcode/xcodecache"
 	"github.com/bitrise-io/go-xcode/xcpretty"
 	"github.com/bitrise-steplib/steps-xcode-archive/utils"
 )
@@ -33,6 +33,7 @@ type Config struct {
 	ForceCodeSignIdentity     string `env:"force_code_sign_identity"`
 	DisableCodesign           bool   `env:"disable_codesign,opt[yes,no]"`
 	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
+	CacheLevel                string `env:"cache_level,opt[none,swift_packages]"`
 	OutputTool                string `env:"output_tool,opt[xcpretty,xcodebuild]"`
 	OutputDir                 string `env:"output_dir,dir"`
 
@@ -50,6 +51,11 @@ func main() {
 
 	fmt.Println()
 	log.Infof("Step determined configs:")
+
+	absProjectPath, err := filepath.Abs(conf.ProjectPath)
+	if err != nil {
+		fail("Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
+	}
 
 	// Detect Xcode major version
 	xcodebuildVersion, err := utility.GetXcodeVersion()
@@ -134,7 +140,7 @@ func main() {
 	log.Infof("Analyzing the project")
 
 	isWorkspace := false
-	ext := filepath.Ext(conf.ProjectPath)
+	ext := filepath.Ext(absProjectPath)
 	if ext == ".xcodeproj" {
 		isWorkspace = false
 	} else if ext == ".xcworkspace" {
@@ -143,7 +149,7 @@ func main() {
 		fail("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
 	}
 
-	analyzeCmd := xcodebuild.NewCommandBuilder(conf.ProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
+	analyzeCmd := xcodebuild.NewCommandBuilder(absProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
 
 	analyzeCmd.SetDisableIndexWhileBuilding(conf.DisableIndexWhileBuilding)
 	analyzeCmd.SetScheme(conf.Scheme)
@@ -152,13 +158,17 @@ func main() {
 		analyzeCmd.SetDisableCodesign(true)
 	}
 
-	if outputTool == "xcpretty" {
-		xcprettyCmd := xcpretty.New(analyzeCmd)
+	var swiftPackagesPath string
+	if xcodeMajorVersion >= 11 {
+		var err error
+		if swiftPackagesPath, err = cache.SwiftPackagesPath(absProjectPath); err != nil {
+			fail("Failed to get Swift Packages path, error: %s", err)
+		}
+	}
 
-		logWithTimestamp(colorstring.Green, "$ %s", xcprettyCmd.PrintableCmd())
-		fmt.Println()
-
-		if rawXcodebuildOut, err := xcprettyCmd.Run(); err != nil {
+	rawXcodebuildOut, err := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
+	if err != nil {
+		if outputTool == "xcpretty" {
 			log.Errorf("\nLast lines of the Xcode's build log:")
 			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
 
@@ -166,22 +176,17 @@ func main() {
 				log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
 			} else {
 				log.Warnf(`You can find the last couple of lines of Xcode's build log above, but the full log is also available in the raw-xcodebuild-output.log
-The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable
-(value: %s)`, rawXcodebuildOutputLogPath)
+	The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable
+	(value: %s)`, rawXcodebuildOutputLogPath)
 			}
-
-			fail("Analyze failed, error: %s", err)
 		}
-	} else {
-		logWithTimestamp(colorstring.Green, "$ %s", analyzeCmd.PrintableCmd())
-		fmt.Println()
+		fail("Analyze failed, error: %s", err)
+	}
 
-		analyzeRootCmd := analyzeCmd.Command()
-		analyzeRootCmd.SetStdout(os.Stdout)
-		analyzeRootCmd.SetStderr(os.Stderr)
-
-		if err := analyzeRootCmd.Run(); err != nil {
-			fail("Analyze failed, error: %s", err)
+	// Cache swift PM
+	if xcodeMajorVersion >= 11 && conf.CacheLevel == "swift_packages" {
+		if err := cache.CollectSwiftPackages(absProjectPath); err != nil {
+			log.Warnf("Failed to mark swift packages for caching, error: %s", err)
 		}
 	}
 }
