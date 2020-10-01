@@ -35,7 +35,7 @@ workflows:
     envs:
     - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
     - BITRISE_PROJECT_PATH: "sample-swiftpm2/sample-swiftpm2.xcodeproj"
-    - BITRISE_SCHEME: "sample swiftpm"
+    - BITRISE_SCHEME: "sample-swiftpm2"
     after_run:
     - _run_and_test_output
 
