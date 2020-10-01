@@ -40,7 +40,7 @@ inputs:
   - workdir: $BITRISE_SOURCE_DIR
     opts:
       title: "Working directory"
-      summary: ""
+      summary: "Working directory of the step"
       description: |
         Working directory of the step.
         You can leave it empty to don't change it.
@@ -49,7 +49,7 @@ inputs:
   - project_path: $BITRISE_PROJECT_PATH
     opts:
       title: "Project (or Workspace) path"
-      summary: ""
+      summary: "`.xcodeproj` or `.xcworkspace` path"
       description: |
         A `.xcodeproj` or `.xcworkspace` path, relative to
         the Workfing directory (if specified).
@@ -59,7 +59,7 @@ inputs:
   - scheme: $BITRISE_SCHEME
     opts:
       title: "Scheme name"
-      summary: ""
+      summary: "The Scheme to use."
       description: |
         The Scheme to use.
 
