@@ -21,8 +21,8 @@ description: |-
   
   ### Useful links 
   
-  * [Running Xcode tests](/testing/running-xcode-tests/)
-  * [Device testing for iOS](/testing/device-testing-for-ios/)
+  * [Running Xcode tests](https://devcenter.bitrise.io/testing/running-xcode-tests/)
+  * [Device testing for iOS](https://devcenter.bitrise.io/testing/device-testing-for-ios/)
   
   ### Related Steps 
   
@@ -64,7 +64,7 @@ inputs:
       summary: "Working directory of the Step"
       description: |
         Working directory of the Step.
-        You can leave it empty to don't change it.
+        If you leave it empty, the default working directory will be used.
       is_required: false
       is_expand: true
   - project_path: $BITRISE_PROJECT_PATH
@@ -102,7 +102,7 @@ inputs:
       description: |-
         Force the `xcodebuild` command to use specified code signing identity.
         Specify a code signing identity as a full ID (for example, `iPhone Developer: Bitrise Bot (VV2J4SV8V4)`)
-        or specify a code signing group (`iPhone Developer` or `iPhone Distribution`).
+        or specify a code signing group (for example, `iPhone Developer` or `iPhone Distribution`).
   - force_provisioning_profile:
     opts:
       title: "Force code signing with provisioning profile"
