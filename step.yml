@@ -167,7 +167,7 @@ inputs:
   - output_dir: $BITRISE_DEPLOY_DIR
     opts:
       category: Debug
-      title: Output directory path
+      title: Output directory pathkds`s.cmszk.cmk.smcxk.
       summary: Output directory path
       description: This directory will contain the generated `raw-xcodebuild-output.log`.
       is_required: true
