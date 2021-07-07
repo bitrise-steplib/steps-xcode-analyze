@@ -151,6 +151,14 @@ inputs:
       - "none"
       - "swift_packages"
       is_required: true
+  - xcodebuild_options:
+    opts:
+      category: Debug
+      title: Additional options for xcodebuild call
+      description: |-
+        Options added to the end of the xcodebuild call.
+        You can use multiple options, separated by a space
+        character. Example: `-xcconfig PATH -verbose`
   - output_tool: xcpretty
     opts:
       category: Debug

@@ -16,6 +16,7 @@ import (
 	cache "github.com/bitrise-io/go-xcode/xcodecache"
 	"github.com/bitrise-io/go-xcode/xcpretty"
 	"github.com/bitrise-steplib/steps-xcode-archive/utils"
+	"github.com/kballard/go-shellquote"
 )
 
 const (
@@ -164,6 +165,15 @@ func main() {
 		if swiftPackagesPath, err = cache.SwiftPackagesPath(absProjectPath); err != nil {
 			fail("Failed to get Swift Packages path, error: %s", err)
 		}
+	}
+
+	if conf.XcodebuildOptions != "" {
+		userOptions, err := shellquote.Split(conf.XcodebuildOptions)
+		if err != nil {
+			return out, fmt.Errorf("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
+		}
+
+		analyzeCmd.SetCustomOptions(userOptions)
 	}
 
 	rawXcodebuildOut, err := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
