@@ -35,6 +35,7 @@ type Config struct {
 	DisableCodesign           bool   `env:"disable_codesign,opt[yes,no]"`
 	DisableIndexWhileBuilding bool   `env:"disable_index_while_building,opt[yes,no]"`
 	CacheLevel                string `env:"cache_level,opt[none,swift_packages]"`
+	XcodebuildOptions         string `env:"xcodebuild_options"`
 	OutputTool                string `env:"output_tool,opt[xcpretty,xcodebuild]"`
 	OutputDir                 string `env:"output_dir,dir"`
 
@@ -170,7 +171,7 @@ func main() {
 	if conf.XcodebuildOptions != "" {
 		userOptions, err := shellquote.Split(conf.XcodebuildOptions)
 		if err != nil {
-			return out, fmt.Errorf("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
+			fail("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
 		}
 
 		analyzeCmd.SetCustomOptions(userOptions)
