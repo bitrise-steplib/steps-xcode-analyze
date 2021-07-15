@@ -193,8 +193,8 @@ func main() {
 		}
 	}
 
-	rawXcodebuildOut, err := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
-	if err != nil {
+	rawXcodebuildOut, xcErr := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
+	if xcErr != nil {
 		if outputTool == "xcpretty" {
 			log.Errorf("\nLast lines of the Xcode's build log:")
 			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
@@ -207,16 +207,20 @@ func main() {
 	(value: %s)`, rawXcodebuildOutputLogPath)
 			}
 		}
-		fail("Analyze failed, error: %s", err)
 	}
 
+	fmt.Println()
 	if xcresultPath != "" {
 		// export xcresult bundle
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_XCRESULT_PATH", xcresultPath); err != nil {
 			log.Warnf("Failed to export: BITRISE_XCRESULT_PATH, error: %s", err)
 		} else {
-			log.Infof("Exported BITRISE_XCRESULT_PATH: %s", xcresultPath)
+			log.Printf("Exported BITRISE_XCRESULT_PATH: %s", xcresultPath)
 		}
+	}
+
+	if xcErr != nil {
+		fail("Analyze failed: %s", xcErr)
 	}
 
 	// Cache swift PM
