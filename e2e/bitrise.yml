@@ -19,7 +19,27 @@ workflows:
     - _run
     - _check_outputs
 
-  test_swift_xcactivitylog:
+  test_xcactivitylog:
+    before_run:
+    - _expose_xcode_version
+    steps:
+    - script:
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -e
+            if [[ ${XCODE_MAJOR_VERSION} -lt 11 ]]; then
+              echo "This test case requires Xcode >= 11, skipping..."
+              exit 0
+            fi
+            envman add --key XCODE_MAJOR_VERSION_AT_LEAST_11 --value "true"
+    - bitrise-run:
+        run_if: '{{enveq "XCODE_MAJOR_VERSION_AT_LEAST_11" "true"}}'
+        inputs:
+        - workflow_id: utility_test_xcactivitylog
+        - bitrise_config_path: ./e2e/bitrise.yml
+
+  utility_test_xcactivitylog:
     envs:
     - TEST_APP_URL: https://github.com/bitrise-io/sample-swift-project-with-parallel-ui-test.git
     - TEST_APP_BRANCH: master
@@ -67,9 +87,6 @@ workflows:
         - deployed_files:
         - deployed_dirs:
 
-                    # BITRISE_XCODEBUILD_TEST_LOG_PATH
-            # BITRISE_XCRESULT_ZIP_PATH
-
   _parse_xcactivitylog:
     steps:
     - script:
@@ -82,3 +99,28 @@ workflows:
             xclogparser parse --project $BITRISE_SCHEME --reporter html --output ./xcbuildlogparser
             zip -r $BITRISE_DEPLOY_DIR/activity_logs.zip ./xcbuildlogparser
             echo "Deploy dir: $BITRISE_DEPLOY_DIR"
+
+  _expose_xcode_version:
+    steps:
+    - script:
+        title: Expose Xcode major version
+        inputs:
+        - content: |-
+            #!/bin/env bash
+            set -e
+
+            if [[ ! -z "$XCODE_MAJOR_VERSION" ]]; then
+              echo "Xcode major version already exposed: $XCODE_MAJOR_VERSION"
+              exit 0
+            fi
+
+            version=`xcodebuild -version`
+            regex="Xcode ([0-9]*)."
+            if [[ ! $version =~ $regex ]]; then
+              echo "Failed to determine Xcode major version"
+              exit 1
+            fi
+
+            xcode_major_version=${BASH_REMATCH[1]}
+            echo "Xcode major version: $xcode_major_version"
+            envman add --key XCODE_MAJOR_VERSION --value $xcode_major_version
