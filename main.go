@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/errorutil"
 	"github.com/bitrise-io/go-utils/log"
 	"github.com/bitrise-io/go-utils/pathutil"
+	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/go-xcode/utility"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
@@ -40,6 +44,8 @@ type Config struct {
 	OutputDir                 string `env:"output_dir,dir"`
 
 	VerboseLog bool `env:"verbose_log,opt[yes,no]"`
+
+	DeployDir string `env:"BITRISE_DEPLOY_DIR"`
 }
 
 func main() {
@@ -120,6 +126,12 @@ func main() {
 	// Output files
 	rawXcodebuildOutputLogPath := filepath.Join(conf.OutputDir, "raw-xcodebuild-output.log")
 
+	tempDir, err := ioutil.TempDir("", "XCOutput")
+	if err != nil {
+		fail("Could not create result bundle path directory: %s", err)
+	}
+	xcresultPath := path.Join(tempDir, "Analyze.xcresult")
+
 	//
 	// Cleanup
 	filesToCleanup := []string{
@@ -160,21 +172,25 @@ func main() {
 		analyzeCmd.SetDisableCodesign(true)
 	}
 
+	var customOptions []string
+	if conf.XcodebuildOptions != "" {
+		if customOptions, err = shellquote.Split(conf.XcodebuildOptions); err != nil {
+			fail("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
+		}
+
+		analyzeCmd.SetCustomOptions(customOptions)
+	}
+
+	if !sliceutil.IsStringInSlice("-resultBundlePath", customOptions) {
+		analyzeCmd.SetResultBundlePath(xcresultPath)
+	}
+
 	var swiftPackagesPath string
 	if xcodeMajorVersion >= 11 {
 		var err error
 		if swiftPackagesPath, err = cache.SwiftPackagesPath(absProjectPath); err != nil {
 			fail("Failed to get Swift Packages path, error: %s", err)
 		}
-	}
-
-	if conf.XcodebuildOptions != "" {
-		userOptions, err := shellquote.Split(conf.XcodebuildOptions)
-		if err != nil {
-			fail("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
-		}
-
-		analyzeCmd.SetCustomOptions(userOptions)
 	}
 
 	rawXcodebuildOut, err := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
@@ -192,6 +208,15 @@ func main() {
 			}
 		}
 		fail("Analyze failed, error: %s", err)
+	}
+
+	if xcresultPath != "" {
+		// export xcresult bundle
+		if err := tools.ExportEnvironmentWithEnvman("BITRISE_XCRESULT_PATH", xcresultPath); err != nil {
+			log.Warnf("Failed to export: BITRISE_XCRESULT_PATH, error: %s", err)
+		} else {
+			log.Infof("Exported BITRISE_XCRESULT_PATH: %s", xcresultPath)
+		}
 	}
 
 	// Cache swift PM
