@@ -1,118 +1,43 @@
-format_version: 7
+format_version: "11"
 default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
 
 app:
   envs:
-  - ORIG_BITRISE_SOURCE_DIR: $BITRISE_SOURCE_DIR
-  - BITRISE_PROJECT_PATH: $BITRISE_PROJECT_PATH
-  - BITRISE_SCHEME: $BITRISE_SCHEME
   # if you want to use/test the force-code-sign mode
   - BITRISE_CODE_SIGN_IDENTITY: $BITRISE_CODE_SIGN_IDENTITY
   - BITRISE_PROVISIONING_PROFILE_ID: $BITRISE_PROVISIONING_PROFILE_ID
 
 workflows:
-  # ----------------------------------------------------------------
-  # --- workflow to Step Test
-  test:
+  check:
     steps:
-    - go-list:
-    - golint:
-    - errcheck:
-    - go-test:
-    after_run:    
-    - test_objc
-    - test_swiftpm
+    - git::https://github.com/bitrise-steplib/steps-check.git: {}
 
-  test_objc:
+  e2e:
+    steps:
+      - git::https://github.com/bitrise-steplib/steps-check.git:
+          inputs:
+            - workflow: e2e
+
+  sample:
     envs:
-    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-simple-objc.git
-    - BITRISE_PROJECT_PATH: ios-simple-objc/ios-simple-objc.xcodeproj
-    - BITRISE_SCHEME: ios-simple-objc
-    after_run:
-    - _run_and_test_output
-
-  test_swiftpm:
-    envs:
-    - SAMPLE_APP_URL: https://github.com/bitrise-io/sample-apps-ios-swiftpm.git
-    - BITRISE_PROJECT_PATH: "sample-swiftpm2/sample-swiftpm2.xcodeproj"
-    - BITRISE_SCHEME: "sample-swiftpm2"
-    after_run:
-    - _run_and_test_output
-
-  _run_and_test_output:
+    - TEST_APP_URL: https://github.com/bitrise-io/sample-swift-project-with-parallel-ui-test.git
+    - TEST_APP_BRANCH: master
+    - BITRISE_PROJECT_PATH: BullsEye.xcworkspace
+    - BITRISE_SCHEME: BullsEye
     steps:
     - script:
         title: Remove temporary directory
         inputs:
         - content: rm -rf "$BITRISE_SOURCE_DIR/_tmp"
-    - change-workdir:
-        title: Switch working dir to _tmp dir
-        run_if: true
+    - git::https://github.com/bitrise-steplib/bitrise-step-simple-git-clone.git:
         inputs:
-        - path: "$BITRISE_SOURCE_DIR/_tmp"
-        - is_create_path: true
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -v
-            git clone $SAMPLE_APP_URL .
+          - repository_url: $TEST_APP_URL
+          - clone_into_dir: ./_tmp
+          - branch: $TEST_APP_BRANCH
     - path::./:
-        title: Test - xcodebuild output
+        title: Self-test
         inputs:
-        - is_clean_build: "no"
-        - workdir: $PROJECT_WORKDIR
-        - output_tool: xcodebuild
+        - project_path: ./_tmp/$BITRISE_PROJECT_PATH
+        - scheme: $BITRISE_SCHEME
         - force_code_sign_identity: $BITRISE_CODE_SIGN_IDENTITY
         - force_provisioning_profile: $BITRISE_PROVISIONING_PROFILE_ID
-    - change-workdir:
-        title: Switch working dir to _tmp dir
-        run_if: true
-        inputs:
-        - path: "./_tmp"
-        - is_create_path: true
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -e
-            set -v
-            git clone $SAMPLE_APP_URL .
-    - path::./:
-        title: Test - xcpretty output
-        inputs:
-        - is_force_code_sign: "no"
-        - is_clean_build: "no"
-        - workdir: $PROJECT_WORKDIR
-        - output_tool: xcpretty
-        - force_code_sign_identity: $BITRISE_CODE_SIGN_IDENTITY
-        - force_provisioning_profile: $BITRISE_PROVISIONING_PROFILE_ID
-
-  # ----------------------------------------------------------------
-  # --- Utility workflows
-  dep-update:
-    title: Dep update
-    description: |
-      Used for updating bitrise dependencies with dep
-    steps:
-    - script:
-        title: Dependency update
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            go get -u -v github.com/golang/dep/cmd/dep
-            dep ensure -v
-            dep ensure -v -update
-            
-  # ----------------------------------------------------------------
-  # --- workflows to Share this step into a Step Library
-  audit-this-step:
-    steps:
-    - script:
-        inputs:
-        - content: |-
-            #!/bin/bash
-            set -ex
-            stepman audit --step-yml ./step.yml
