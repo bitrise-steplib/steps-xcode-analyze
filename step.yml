@@ -51,8 +51,6 @@ is_skippable: false
 deps:
   check_only:
   - name: xcode
-  brew:
-  - name: go
 toolkit:
   go:
     package_name: github.com/bitrise-steplib/steps-xcode-analyze
@@ -170,8 +168,7 @@ inputs:
       - xcpretty
       - xcodebuild
       is_required: true
-      is_expand: false
-      is_dont_change_value: false
+      is_expand: true
   - output_dir: $BITRISE_DEPLOY_DIR
     opts:
       category: Debug
@@ -188,3 +185,9 @@ inputs:
       value_options:
       - "yes"
       - "no"
+outputs:
+- BITRISE_XCRESULT_PATH:
+  opts:
+    title: The path of the generated `.xcresult`
+    description: |-
+      The path of the generated `.xcresult`.
