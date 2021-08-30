@@ -1,92 +1,85 @@
-# Run Xcode Analyze step
+# Xcode Analyze
 
-The new Run Xcode Analyze step.
+[![Step changelog](https://shields.io/github/v/release/bitrise-steplib/steps-xcode-analyze?include_prereleases&label=changelog&color=blueviolet)](https://github.com/bitrise-steplib/steps-xcode-analyze/releases)
 
-## How to use this Step
+Find flaws and potential bugs in the source code of an app with the
+static analyzer built into Xcode.
 
-Can be run directly with the [bitrise CLI](https://github.com/bitrise-io/bitrise),
-just `git clone` this repository, `cd` into it's folder in your Terminal/Command Line
-and call `bitrise run test`.
+<details>
+<summary>Description</summary>
 
-*Check the `bitrise.yml` file for required inputs which have to be
-added to your `.bitrise.secrets.yml` file!*
+The Step uses the static analyzer built directly into Xcode to analyze your app's source code: the static analyzer tries out thousands of possible code paths in a few seconds, reporting potential bugs that might have remained hidden or bugs that might be nearly impossible to replicate. 
 
-Step by step:
+This process also identifies areas in your code that don’t follow recommended API usage, such as Foundation, UIKit, and AppKit idioms. 
 
-1. Open up your Terminal / Command Line
-2. `git clone` the repository
-3. `cd` into the directory of the step (the one you just `git clone`d)
-5. Create a `.bitrise.secrets.yml` file in the same directory of `bitrise.yml`
-   (the `.bitrise.secrets.yml` is a git ignored file, you can store your secrets in it)
-6. Check the `bitrise.yml` file for any secret you should set in `.bitrise.secrets.yml`
-  * Best practice is to mark these options with something like `# define these in your .bitrise.secrets.yml`, in the `app:envs` section.
-7. Once you have all the required secret parameters in your `.bitrise.secrets.yml` you can just run this step with the [bitrise CLI](https://github.com/bitrise-io/bitrise): `bitrise run test`
+### Configuring the Step 
 
-An example `.bitrise.secrets.yml` file:
+In most cases, you don't need to change the Step's configuration. The default input values work well if you added your iOS app on the website, using automatic configuration. 
 
-```
-envs:
-- A_SECRET_PARAM_ONE: the value for secret one
-- A_SECRET_PARAM_TWO: the value for secret two
-```
+To make sure the Step works well for you:
 
-## How to create your own step
+1. Make sure the **Project (or Workspace) path** points to the path of the `.xcodeproj` or `.xcworkspace` file of your app, relative to the app's root directory.
+1. Make sure the **Scheme name** input points to a valid shared Xcode scheme. Note that it must be a shared scheme! 
+1. Optionally, you can force the Step to use specific code signing identities. To do so, use the **Force code signing with Identity** and **Force code signing with Provisioning Profile** inputs. 
 
-1. Create a new git repository for your step (**don't fork** the *step template*, create a *new* repository)
-2. Copy the [step template](https://github.com/bitrise-steplib/step-template) files into your repository
-3. Fill the `step.sh` with your functionality
-4. Wire out your inputs to `step.yml` (`inputs` section)
-5. Fill out the other parts of the `step.yml` too
-6. Provide test values for the inputs in the `bitrise.yml`
-7. Run your step with `bitrise run test` - if it works, you're ready
+   For detailed instructions on their use, see the inputs themselves.
 
-__For Step development guidelines & best practices__ check this documentation: [https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md](https://github.com/bitrise-io/bitrise/blob/master/_docs/step-development-guideline.md).
+### Useful links 
 
-**NOTE:**
+* [Running Xcode tests](https://devcenter.bitrise.io/testing/running-xcode-tests/)
+* [Device testing for iOS](https://devcenter.bitrise.io/testing/device-testing-for-ios/)
 
-If you want to use your step in your project's `bitrise.yml`:
+### Related Steps 
 
-1. git push the step into it's repository
-2. reference it in your `bitrise.yml` with the `git::PUBLIC-GIT-CLONE-URL@BRANCH` step reference style:
+* [Xcode build for simulator](https://app.bitrise.io/integrations/steps/xcode-build-for-simulator)
+* [Xcode Test for iOS](https://app.bitrise.io/integrations/steps/xcode-test)
+</details>
 
-```
-- git::https://github.com/user/my-step.git@branch:
-   title: My step
-   inputs:
-   - my_input_1: "my value 1"
-   - my_input_2: "my value 2"
-```
+## 🧩 Get started
 
-You can find more examples of step reference styles
-in the [bitrise CLI repository](https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml#L65).
+Add this step directly to your workflow in the [Bitrise Workflow Editor](https://devcenter.bitrise.io/steps-and-workflows/steps-and-workflows-index/).
 
-## How to contribute to this Step
+You can also run this step directly with [Bitrise CLI](https://github.com/bitrise-io/bitrise).
 
-1. Fork this repository
-2. `git clone` it
-3. Create a branch you'll work on
-4. To use/test the step just follow the **How to use this Step** section
-5. Do the changes you want to
-6. Run/test the step before sending your contribution
-  * You can also test the step in your `bitrise` project, either on your Mac or on [bitrise.io](https://www.bitrise.io)
-  * You just have to replace the step ID in your project's `bitrise.yml` with either a relative path, or with a git URL format
-  * (relative) path format: instead of `- original-step-id:` use `- path::./relative/path/of/script/on/your/Mac:`
-  * direct git URL format: instead of `- original-step-id:` use `- git::https://github.com/user/step.git@branch:`
-  * You can find more example of alternative step referencing at: https://github.com/bitrise-io/bitrise/blob/master/_examples/tutorials/steps-and-workflows/bitrise.yml
-7. Once you're done just commit your changes & create a Pull Request
+## ⚙️ Configuration
 
+<details>
+<summary>Inputs</summary>
 
-## Share your own Step
+| Key | Description | Flags | Default |
+| --- | --- | --- | --- |
+| `workdir` | Working directory of the Step. If you leave it empty, the default working directory will be used.  |  | `$BITRISE_SOURCE_DIR` |
+| `project_path` | The path to your app's `.xcodeproj` or `.xcworkspace` file, relative to the Step's working directory (if one is specified).  | required | `$BITRISE_PROJECT_PATH` |
+| `scheme` | The Xcode scheme to use for the analysis. **IMPORTANT**: The scheme must be marked as shared in Xcode!  | required | `$BITRISE_SCHEME` |
+| `is_clean_build` |  | required | `no` |
+| `force_code_sign_identity` | Force the `xcodebuild` command to use specified code signing identity. Specify a code signing identity as a full ID (for example, `iPhone Developer: Bitrise Bot (VV2J4SV8V4)`) or specify a code signing group (for example, `iPhone Developer` or `iPhone Distribution`). |  |  |
+| `force_provisioning_profile` | Force the `xcodebuild` command to use a specified provisioning profile. You must use the provisioning profile's UUID. The profile's name is NOT accepted by xcodebuild. To get your UUID: - In Xcode select your project -> Build Settings -> Code Signing - Select the desired Provisioning Profile, then scroll down in profile list and click on Other... - The popup will show your profile's UUID. Format example: - c5be4123-1234-4f9d-9843-0d9be985a068 |  |  |
+| `disable_codesign` | In order to skip code signing, set this option to `yes`. |  | `yes` |
+| `disable_index_while_building` | Add `COMPILER_INDEX_STORE_ENABLE=NO` flag to the `xcodebuild` command which will disable the indexing during the build. Indexing is needed for  * Autocomplete. * Ability to quickly jump to definition. * Get class and method help by alt clicking. None of the above ar needed in a CI environment. **Note:** In Xcode you can turn off the `Index-WhileBuilding` feature  by disabling the `Enable Index-WhileBuilding Functionality` in the `Build Settings`.<br/> In a CI environment you can disable it by adding `COMPILER_INDEX_STORE_ENABLE=NO` flag to the `xcodebuild` command. |  | `yes` |
+| `cache_level` | Available options: - `none` : Disable caching. - `swift_packages` : Cache Swift PM packages added to the Xcode project. | required | `swift_packages` |
+| `xcodebuild_options` | Options added to the end of the xcodebuild call. You can use multiple options, separated by a space character. Example: `-xcconfig PATH -verbose` |  |  |
+| `output_tool` | If the input is set to `xcpretty`, the xcodebuild output will be prettified by xcpretty. If the input is set to `xcodebuild`, the raw xcodebuild output will be printed. | required | `xcpretty` |
+| `output_dir` | This directory will contain the generated `raw-xcodebuild-output.log`. | required | `$BITRISE_DEPLOY_DIR` |
+| `verbose_log` | Enable verbose logging? | required | `no` |
+</details>
 
-You can share your Step or step version with the [bitrise CLI](https://github.com/bitrise-io/bitrise). If you use the `bitrise.yml` included in this repository, all you have to do is:
+<details>
+<summary>Outputs</summary>
 
-1. In your Terminal / Command Line `cd` into this directory (where the `bitrise.yml` of the step is located)
-1. Run: `bitrise run test` to test the step
-1. Run: `bitrise run audit-this-step` to audit the `step.yml`
-1. Check the `share-this-step` workflow in the `bitrise.yml`, and fill out the
-   `envs` if you haven't done so already (don't forget to bump the version number if this is an update
-   of your step!)
-1. Then run: `bitrise run share-this-step` to share the step (version) you specified in the `envs`
-1. Send the Pull Request, as described in the logs of `bitrise run share-this-step`
+| Environment Variable | Description |
+| --- | --- |
+| `BITRISE_XCRESULT_PATH` | The path of the generated `.xcresult`. |
+</details>
 
-That's all ;)
+## 🙋 Contributing
+
+We welcome [pull requests](https://github.com/bitrise-steplib/steps-xcode-analyze/pulls) and [issues](https://github.com/bitrise-steplib/steps-xcode-analyze/issues) against this repository.
+
+For pull requests, work on your changes in a forked repository and use the Bitrise CLI to [run step tests locally](https://devcenter.bitrise.io/bitrise-cli/run-your-first-build/).
+
+**Note:** this step's end-to-end tests (defined in `e2e/bitrise.yml`) are working with secrets which are intentionally not stored in this repo. External contributors won't be able to run those tests. Don't worry, if you open a PR with your contribution, we will help with running tests and make sure that they pass.
+
+Learn more about developing steps:
+
+- [Create your own step](https://devcenter.bitrise.io/contributors/create-your-own-step/)
+- [Testing your Step](https://devcenter.bitrise.io/contributors/testing-and-versioning-your-steps/)
