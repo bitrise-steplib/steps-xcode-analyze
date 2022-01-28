@@ -15,7 +15,6 @@ import (
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/bitrise-io/go-xcode/utility"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	cache "github.com/bitrise-io/go-xcode/xcodecache"
 	"github.com/bitrise-io/go-xcode/xcpretty"
@@ -23,10 +22,7 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
-const (
-	bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
-	minSupportedXcodeMajorVersion   = 6
-)
+const bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
 
 // Config ...
 type Config struct {
@@ -63,18 +59,6 @@ func main() {
 	absProjectPath, err := filepath.Abs(conf.ProjectPath)
 	if err != nil {
 		fail("Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
-	}
-
-	// Detect Xcode major version
-	xcodebuildVersion, err := utility.GetXcodeVersion()
-	if err != nil {
-		fail("Failed to determine xcode version, error: %s", err)
-	}
-	log.Printf("- xcodebuildVersion: %s (%s)", xcodebuildVersion.Version, xcodebuildVersion.BuildVersion)
-
-	xcodeMajorVersion := xcodebuildVersion.MajorVersion
-	if xcodeMajorVersion < minSupportedXcodeMajorVersion {
-		fail("Invalid xcode major version (%d), should not be less then min supported: %d", xcodeMajorVersion, minSupportedXcodeMajorVersion)
 	}
 
 	// Detect xcpretty version
@@ -185,12 +169,9 @@ func main() {
 		analyzeCmd.SetResultBundlePath(xcresultPath)
 	}
 
-	var swiftPackagesPath string
-	if xcodeMajorVersion >= 11 {
-		var err error
-		if swiftPackagesPath, err = cache.SwiftPackagesPath(absProjectPath); err != nil {
-			fail("Failed to get Swift Packages path, error: %s", err)
-		}
+	swiftPackagesPath, err := cache.SwiftPackagesPath(absProjectPath)
+	if err != nil {
+		fail("Failed to get Swift Packages path, error: %s", err)
 	}
 
 	rawXcodebuildOut, xcErr := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
@@ -224,7 +205,7 @@ func main() {
 	}
 
 	// Cache swift PM
-	if xcodeMajorVersion >= 11 && conf.CacheLevel == "swift_packages" {
+	if conf.CacheLevel == "swift_packages" {
 		if err := cache.CollectSwiftPackages(absProjectPath); err != nil {
 			log.Warnf("Failed to mark swift packages for caching, error: %s", err)
 		}
