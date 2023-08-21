@@ -137,19 +137,8 @@ func main() {
 	fmt.Println()
 	log.Infof("Analyzing the project")
 
-	isWorkspace := false
-	ext := filepath.Ext(absProjectPath)
-	if ext == ".xcodeproj" {
-		isWorkspace = false
-	} else if ext == ".xcworkspace" {
-		isWorkspace = true
-	} else {
-		fail("Project file extension should be .xcodeproj or .xcworkspace, but got: %s", ext)
-	}
+	analyzeCmd := xcodebuild.NewCommandBuilder(absProjectPath, "analyze")
 
-	analyzeCmd := xcodebuild.NewCommandBuilder(absProjectPath, isWorkspace, xcodebuild.AnalyzeAction)
-
-	analyzeCmd.SetDisableIndexWhileBuilding(conf.DisableIndexWhileBuilding)
 	analyzeCmd.SetScheme(conf.Scheme)
 
 	if conf.DisableCodesign {
@@ -161,9 +150,13 @@ func main() {
 		if customOptions, err = shellquote.Split(conf.XcodebuildOptions); err != nil {
 			fail("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
 		}
-
-		analyzeCmd.SetCustomOptions(customOptions)
 	}
+
+	if conf.DisableIndexWhileBuilding {
+		customOptions = append(customOptions, "COMPILER_INDEX_STORE_ENABLE=NO")
+	}
+
+	analyzeCmd.SetCustomOptions(customOptions)
 
 	if !sliceutil.IsStringInSlice("-resultBundlePath", customOptions) {
 		analyzeCmd.SetResultBundlePath(xcresultPath)
