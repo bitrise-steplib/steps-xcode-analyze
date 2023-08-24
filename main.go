@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -110,7 +109,7 @@ func main() {
 	// Output files
 	rawXcodebuildOutputLogPath := filepath.Join(conf.OutputDir, "raw-xcodebuild-output.log")
 
-	tempDir, err := ioutil.TempDir("", "XCOutput")
+	tempDir, err := os.MkdirTemp("", "XCOutput")
 	if err != nil {
 		fail("Could not create result bundle path directory: %s", err)
 	}
