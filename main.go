@@ -5,15 +5,19 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
+	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/log"
-	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
+	"github.com/bitrise-io/go-utils/v2/command"
+	"github.com/bitrise-io/go-utils/v2/env"
+	"github.com/bitrise-io/go-utils/v2/fileutil"
+	"github.com/bitrise-io/go-utils/v2/log"
+	"github.com/bitrise-io/go-utils/v2/pathutil"
+	"github.com/bitrise-io/go-xcode/v2/xcodecommand"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	cache "github.com/bitrise-io/go-xcode/xcodecache"
 	"github.com/bitrise-io/go-xcode/xcpretty"
@@ -21,7 +25,14 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
-const bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
+const (
+	XcbeautifyTool = "xcbeautify"
+	XcodebuildTool = "xcodebuild"
+	XcprettyTool   = "xcpretty"
+
+	xcodebuildLogFilename           = "xcodebuild-analyze.log"
+	bitriseXcodeRawResultTextEnvKey = "BITRISE_XCODE_RAW_RESULT_TEXT_PATH"
+)
 
 // Config ...
 type Config struct {
@@ -44,20 +55,46 @@ type Config struct {
 }
 
 func main() {
+	log := log.NewLogger()
+
 	var conf Config
 	if err := stepconf.Parse(&conf); err != nil {
-		fail("Failed to parse configs, error: %s", err)
+		fail(log, "Failed to parse configs, error: %s", err)
+	}
+
+	envRepository := env.NewRepository()
+	cmdFactory := command.NewFactory(envRepository)
+	pathChecker := pathutil.NewPathChecker()
+	fileManager := fileutil.NewFileManager()
+
+	xcodeCommandRunner := xcodecommand.Runner(nil)
+	switch conf.OutputTool {
+	case XcodebuildTool:
+		xcodeCommandRunner = xcodecommand.NewRawCommandRunner(log, cmdFactory)
+	case XcbeautifyTool:
+		xcodeCommandRunner = xcodecommand.NewXcbeautifyRunner(log, cmdFactory)
+	case XcprettyTool:
+		commandLocator := env.NewCommandLocator()
+		rubyComamndFactory, err := ruby.NewCommandFactory(cmdFactory, commandLocator)
+		if err != nil {
+			fail(log, "failed to install xcpretty: %s", err)
+		}
+		rubyEnv := ruby.NewEnvironment(rubyComamndFactory, commandLocator, log)
+
+		xcodeCommandRunner = xcodecommand.NewXcprettyCommandRunner(log, cmdFactory, pathChecker, fileManager, rubyComamndFactory, rubyEnv)
+	default:
+		panic(fmt.Sprintf("Unknown log formatter: %s", conf.OutputTool))
 	}
 
 	stepconf.Print(conf)
-	log.SetEnableDebugLog(conf.VerboseLog)
+	log.EnableDebugLog(conf.VerboseLog)
 
 	fmt.Println()
 	log.Infof("Step determined configs:")
 
 	absProjectPath, err := filepath.Abs(conf.ProjectPath)
 	if err != nil {
-		fail("Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
+		fail(log, "Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
 	}
 
 	// Detect xcpretty version
@@ -111,7 +148,7 @@ func main() {
 
 	tempDir, err := os.MkdirTemp("", "XCOutput")
 	if err != nil {
-		fail("Could not create result bundle path directory: %s", err)
+		fail(log, "Could not create result bundle path directory: %s", err)
 	}
 	xcresultPath := path.Join(tempDir, "Analyze.xcresult")
 
@@ -122,11 +159,11 @@ func main() {
 	}
 
 	for _, pth := range filesToCleanup {
-		if exist, err := pathutil.IsPathExists(pth); err != nil {
-			fail("Failed to check if path (%s) exist, error: %s", pth, err)
+		if exist, err := pathChecker.IsPathExists(pth); err != nil {
+			fail(log, "Failed to check if path (%s) exist, error: %s", pth, err)
 		} else if exist {
 			if err := os.RemoveAll(pth); err != nil {
-				fail("Failed to remove path (%s), error: %s", pth, err)
+				fail(log, "Failed to remove path (%s), error: %s", pth, err)
 			}
 		}
 	}
@@ -147,7 +184,7 @@ func main() {
 	var customOptions []string
 	if conf.XcodebuildOptions != "" {
 		if customOptions, err = shellquote.Split(conf.XcodebuildOptions); err != nil {
-			fail("failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
+			fail(log, "failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
 		}
 	}
 
@@ -163,10 +200,10 @@ func main() {
 
 	swiftPackagesPath, err := cache.SwiftPackagesPath(absProjectPath)
 	if err != nil {
-		fail("Failed to get Swift Packages path, error: %s", err)
+		fail(log, "Failed to get Swift Packages path, error: %s", err)
 	}
 
-	rawXcodebuildOut, xcErr := runCommandWithRetry(analyzeCmd, outputTool == "xcpretty", swiftPackagesPath)
+	rawXcodebuildOut, xcErr := runCommandWithRetry(xcodeCommandRunner, conf.OutputTool, analyzeCmd, swiftPackagesPath, log)
 	if xcErr != nil {
 		if outputTool == "xcpretty" {
 			log.Errorf("\nLast lines of the Xcode's build log:")
@@ -193,7 +230,7 @@ func main() {
 	}
 
 	if xcErr != nil {
-		fail("Analyze failed: %s", xcErr)
+		fail(log, "Analyze failed: %s", xcErr)
 	}
 
 	// Cache swift PM
@@ -204,22 +241,7 @@ func main() {
 	}
 }
 
-func fail(format string, v ...interface{}) {
+func fail(log log.Logger, format string, v ...interface{}) {
 	log.Errorf(format, v...)
 	os.Exit(1)
-}
-
-func currentTimestamp() string {
-	timeStampFormat := "15:04:05"
-	currentTime := time.Now()
-	return currentTime.Format(timeStampFormat)
-}
-
-// ColoringFunc ...
-type ColoringFunc func(...interface{}) string
-
-func logWithTimestamp(coloringFunc ColoringFunc, format string, v ...interface{}) {
-	message := fmt.Sprintf(format, v...)
-	messageWithTimeStamp := fmt.Sprintf("[%s] %s", currentTimestamp(), coloringFunc(message))
-	fmt.Println(messageWithTimeStamp)
 }
