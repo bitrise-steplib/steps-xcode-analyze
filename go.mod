@@ -6,9 +6,9 @@ toolchain go1.23.3
 
 require (
 	github.com/bitrise-io/go-steputils v1.0.5
-	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.18
-	github.com/bitrise-io/go-utils v1.0.12
-	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.23
+	github.com/bitrise-io/go-steputils/v2 v2.0.0-alpha.39
+	github.com/bitrise-io/go-utils v1.0.13
+	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.26
 	github.com/bitrise-io/go-xcode v1.3.0
 	github.com/bitrise-io/go-xcode/v2 v2.0.0-20250903144806-59044af25647
 	github.com/bitrise-steplib/steps-xcode-archive v0.0.0-20191022071803-d25b478ae7b8
