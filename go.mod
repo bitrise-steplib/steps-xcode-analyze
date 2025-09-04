@@ -10,7 +10,7 @@ require (
 	github.com/bitrise-io/go-utils v1.0.13
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.26
 	github.com/bitrise-io/go-xcode v1.3.0
-	github.com/bitrise-io/go-xcode/v2 v2.0.0-20250903144806-59044af25647
+	github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.65.0.20250904120812-fab50f75fcd9
 	github.com/bitrise-steplib/steps-xcode-archive v0.0.0-20191022071803-d25b478ae7b8
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 )
