@@ -18,9 +18,9 @@ import (
 	"github.com/bitrise-io/go-utils/v2/log"
 	"github.com/bitrise-io/go-utils/v2/pathutil"
 	"github.com/bitrise-io/go-xcode/v2/xcodecommand"
+	"github.com/bitrise-io/go-xcode/v2/xcpretty"
 	"github.com/bitrise-io/go-xcode/xcodebuild"
 	cache "github.com/bitrise-io/go-xcode/xcodecache"
-	"github.com/bitrise-io/go-xcode/xcpretty"
 	"github.com/bitrise-steplib/steps-xcode-archive/utils"
 	"github.com/kballard/go-shellquote"
 )
@@ -55,11 +55,11 @@ type Config struct {
 }
 
 func main() {
-	log := log.NewLogger()
+	logger := log.NewLogger()
 
 	var conf Config
 	if err := stepconf.Parse(&conf); err != nil {
-		fail(log, "Failed to parse configs, error: %s", err)
+		fail(logger, "Failed to parse configs, error: %s", err)
 	}
 
 	envRepository := env.NewRepository()
@@ -70,62 +70,64 @@ func main() {
 	xcodeCommandRunner := xcodecommand.Runner(nil)
 	switch conf.OutputTool {
 	case XcodebuildTool:
-		xcodeCommandRunner = xcodecommand.NewRawCommandRunner(log, cmdFactory)
+		xcodeCommandRunner = xcodecommand.NewRawCommandRunner(logger, cmdFactory)
 	case XcbeautifyTool:
-		xcodeCommandRunner = xcodecommand.NewXcbeautifyRunner(log, cmdFactory)
+		xcodeCommandRunner = xcodecommand.NewXcbeautifyRunner(logger, cmdFactory)
 	case XcprettyTool:
 		commandLocator := env.NewCommandLocator()
 		rubyComamndFactory, err := ruby.NewCommandFactory(cmdFactory, commandLocator)
 		if err != nil {
-			fail(log, "failed to install xcpretty: %s", err)
+			fail(logger, "failed to install xcpretty: %s", err)
 		}
-		rubyEnv := ruby.NewEnvironment(rubyComamndFactory, commandLocator, log)
+		rubyEnv := ruby.NewEnvironment(rubyComamndFactory, commandLocator, logger)
 
-		xcodeCommandRunner = xcodecommand.NewXcprettyCommandRunner(log, cmdFactory, pathChecker, fileManager, rubyComamndFactory, rubyEnv)
+		xcodeCommandRunner = xcodecommand.NewXcprettyCommandRunner(logger, cmdFactory, pathChecker, fileManager, rubyComamndFactory, rubyEnv)
 	default:
 		panic(fmt.Sprintf("Unknown log formatter: %s", conf.OutputTool))
 	}
 
 	stepconf.Print(conf)
-	log.EnableDebugLog(conf.VerboseLog)
+	logger.EnableDebugLog(conf.VerboseLog)
 
 	fmt.Println()
-	log.Infof("Step determined configs:")
+	logger.Infof("Step determined configs:")
 
 	absProjectPath, err := filepath.Abs(conf.ProjectPath)
 	if err != nil {
-		fail(log, "Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
+		fail(logger, "Failed to expand project path (%s), error: %s", conf.ProjectPath, err)
 	}
+
+	xcprettyInstance := xcpretty.NewXcpretty(logger)
 
 	// Detect xcpretty version
 	outputTool := conf.OutputTool
 	if outputTool == "xcpretty" {
 		fmt.Println()
-		log.Infof("Checking if output tool (xcpretty) is installed")
+		logger.Infof("Checking if output tool (xcpretty) is installed")
 
-		installed, err := xcpretty.IsInstalled()
+		installed, err := xcprettyInstance.IsInstalled()
 		if err != nil {
-			log.Warnf("Failed to check if xcpretty is installed, error: %s", err)
-			log.Printf("Switching to xcodebuild for output tool")
+			logger.Warnf("Failed to check if xcpretty is installed, error: %s", err)
+			logger.Printf("Switching to xcodebuild for output tool")
 			outputTool = "xcodebuild"
 		} else if !installed {
-			log.Warnf(`xcpretty is not installed`)
+			logger.Warnf(`xcpretty is not installed`)
 			fmt.Println()
-			log.Printf("Installing xcpretty")
+			logger.Printf("Installing xcpretty")
 
-			if cmds, err := xcpretty.Install(); err != nil {
-				log.Warnf("Failed to create xcpretty install command: %s", err)
-				log.Warnf("Switching to xcodebuild for output tool")
+			if cmds, err := xcprettyInstance.Install(); err != nil {
+				logger.Warnf("Failed to create xcpretty install command: %s", err)
+				logger.Warnf("Switching to xcodebuild for output tool")
 				outputTool = "xcodebuild"
 			} else {
 				for _, cmd := range cmds {
 					if out, err := cmd.RunAndReturnTrimmedCombinedOutput(); err != nil {
 						if errorutil.IsExitStatusError(err) {
-							log.Warnf("%s failed: %s", out)
+							logger.Warnf("%s failed: %s", out)
 						} else {
-							log.Warnf("%s failed: %s", err)
+							logger.Warnf("%s failed: %s", err)
 						}
-						log.Warnf("Switching to xcodebuild for output tool")
+						logger.Warnf("Switching to xcodebuild for output tool")
 						outputTool = "xcodebuild"
 					}
 				}
@@ -134,13 +136,13 @@ func main() {
 	}
 
 	if outputTool == "xcpretty" {
-		xcprettyVersion, err := xcpretty.Version()
+		xcprettyVersion, err := xcprettyInstance.Version()
 		if err != nil {
-			log.Warnf("Failed to determin xcpretty version, error: %s", err)
-			log.Printf("Switching to xcodebuild for output tool")
+			logger.Warnf("Failed to determin xcpretty version, error: %s", err)
+			logger.Printf("Switching to xcodebuild for output tool")
 			outputTool = "xcodebuild"
 		}
-		log.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
+		logger.Printf("- xcprettyVersion: %s", xcprettyVersion.String())
 	}
 
 	// Output files
@@ -148,7 +150,7 @@ func main() {
 
 	tempDir, err := os.MkdirTemp("", "XCOutput")
 	if err != nil {
-		fail(log, "Could not create result bundle path directory: %s", err)
+		fail(logger, "Could not create result bundle path directory: %s", err)
 	}
 	xcresultPath := path.Join(tempDir, "Analyze.xcresult")
 
@@ -160,10 +162,10 @@ func main() {
 
 	for _, pth := range filesToCleanup {
 		if exist, err := pathChecker.IsPathExists(pth); err != nil {
-			fail(log, "Failed to check if path (%s) exist, error: %s", pth, err)
+			fail(logger, "Failed to check if path (%s) exist, error: %s", pth, err)
 		} else if exist {
 			if err := os.RemoveAll(pth); err != nil {
-				fail(log, "Failed to remove path (%s), error: %s", pth, err)
+				fail(logger, "Failed to remove path (%s), error: %s", pth, err)
 			}
 		}
 	}
@@ -171,7 +173,7 @@ func main() {
 	//
 	// Analyze project with Xcode Command Line tools
 	fmt.Println()
-	log.Infof("Analyzing the project")
+	logger.Infof("Analyzing the project")
 
 	analyzeCmd := xcodebuild.NewCommandBuilder(absProjectPath, "analyze")
 
@@ -184,7 +186,7 @@ func main() {
 	var customOptions []string
 	if conf.XcodebuildOptions != "" {
 		if customOptions, err = shellquote.Split(conf.XcodebuildOptions); err != nil {
-			fail(log, "failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
+			fail(logger, "failed to shell split XcodebuildOptions (%s), error: %s", conf.XcodebuildOptions, err)
 		}
 	}
 
@@ -200,19 +202,19 @@ func main() {
 
 	swiftPackagesPath, err := cache.SwiftPackagesPath(absProjectPath)
 	if err != nil {
-		fail(log, "Failed to get Swift Packages path, error: %s", err)
+		fail(logger, "Failed to get Swift Packages path, error: %s", err)
 	}
 
-	rawXcodebuildOut, xcErr := runCommandWithRetry(xcodeCommandRunner, conf.OutputTool, analyzeCmd, swiftPackagesPath, log)
+	rawXcodebuildOut, xcErr := runCommandWithRetry(xcodeCommandRunner, conf.OutputTool, analyzeCmd, swiftPackagesPath, logger)
 	if xcErr != nil {
 		if outputTool == "xcpretty" {
-			log.Errorf("\nLast lines of the Xcode's build log:")
+			logger.Errorf("\nLast lines of the Xcode's build log:")
 			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
 
 			if err := utils.ExportOutputFileContent(rawXcodebuildOut, rawXcodebuildOutputLogPath, bitriseXcodeRawResultTextEnvKey); err != nil {
-				log.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
+				logger.Warnf("Failed to export %s, error: %s", bitriseXcodeRawResultTextEnvKey, err)
 			} else {
-				log.Warnf(`You can find the last couple of lines of Xcode's build log above, but the full log is also available in the raw-xcodebuild-output.log
+				logger.Warnf(`You can find the last couple of lines of Xcode's build log above, but the full log is also available in the raw-xcodebuild-output.log
 	The log file is stored in $BITRISE_DEPLOY_DIR, and its full path is available in the $BITRISE_XCODE_RAW_RESULT_TEXT_PATH environment variable
 	(value: %s)`, rawXcodebuildOutputLogPath)
 			}
@@ -223,25 +225,25 @@ func main() {
 	if xcresultPath != "" {
 		// export xcresult bundle
 		if err := tools.ExportEnvironmentWithEnvman("BITRISE_XCRESULT_PATH", xcresultPath); err != nil {
-			log.Warnf("Failed to export: BITRISE_XCRESULT_PATH, error: %s", err)
+			logger.Warnf("Failed to export: BITRISE_XCRESULT_PATH, error: %s", err)
 		} else {
-			log.Printf("Exported BITRISE_XCRESULT_PATH: %s", xcresultPath)
+			logger.Printf("Exported BITRISE_XCRESULT_PATH: %s", xcresultPath)
 		}
 	}
 
 	if xcErr != nil {
-		fail(log, "Analyze failed: %s", xcErr)
+		fail(logger, "Analyze failed: %s", xcErr)
 	}
 
 	// Cache swift PM
 	if conf.CacheLevel == "swift_packages" {
 		if err := cache.CollectSwiftPackages(absProjectPath); err != nil {
-			log.Warnf("Failed to mark swift packages for caching, error: %s", err)
+			logger.Warnf("Failed to mark swift packages for caching, error: %s", err)
 		}
 	}
 }
 
-func fail(log log.Logger, format string, v ...interface{}) {
-	log.Errorf(format, v...)
+func fail(logger log.Logger, format string, v ...interface{}) {
+	logger.Errorf(format, v...)
 	os.Exit(1)
 }
