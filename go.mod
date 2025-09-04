@@ -1,6 +1,6 @@
 module github.com/bitrise-steplib/steps-xcode-analyze
 
-go 1.22
+go 1.20
 
 toolchain go1.23.3
 
