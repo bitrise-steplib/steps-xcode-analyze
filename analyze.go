@@ -16,7 +16,7 @@ import (
 func runCommandWithRetry(xcodeCommandRunner xcodecommand.Runner, logFormatter string, cmd *xcodebuild.CommandBuilder, swiftPackagesPath string, logger log.Logger) (string, error) {
 	output, err := runCommand(xcodeCommandRunner, logFormatter, cmd, logger)
 	if err != nil && swiftPackagesPath != "" && strings.Contains(output, cache.SwiftPackagesStateInvalid) {
-		logger.Warnf("Archive failed, swift packages cache is in an invalid state, error: %s", err)
+		logger.Warnf("Analyze failed, swift packages cache is in an invalid state, error: %s", err)
 		if err := os.RemoveAll(swiftPackagesPath); err != nil {
 			return output, fmt.Errorf("failed to remove invalid Swift package caches, error: %s", err)
 		}
