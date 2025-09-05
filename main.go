@@ -55,12 +55,14 @@ type Config struct {
 }
 
 func main() {
-	logger := log.NewLogger()
 
 	var conf Config
 	if err := stepconf.Parse(&conf); err != nil {
-		fail(logger, "Failed to parse configs, error: %s", err)
+		fail(log.NewLogger(), "Failed to parse configs, error: %s", err)
 	}
+
+	stepconf.Print(conf)
+	logger := log.NewLogger(log.WithDebugLog(true))
 
 	envRepository := env.NewRepository()
 	cmdFactory := command.NewFactory(envRepository)
@@ -85,9 +87,6 @@ func main() {
 	default:
 		panic(fmt.Sprintf("Unknown log formatter: %s", conf.OutputTool))
 	}
-
-	stepconf.Print(conf)
-	logger.EnableDebugLog(conf.VerboseLog)
 
 	fmt.Println()
 	logger.Infof("Step determined configs:")
@@ -138,7 +137,7 @@ func main() {
 	if outputTool == "xcpretty" {
 		xcprettyVersion, err := xcprettyInstance.Version()
 		if err != nil {
-			logger.Warnf("Failed to determin xcpretty version, error: %s", err)
+			logger.Warnf("Failed to determine xcpretty version, error: %s", err)
 			logger.Printf("Switching to xcodebuild for output tool")
 			outputTool = "xcodebuild"
 		}
