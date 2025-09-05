@@ -97,6 +97,7 @@ workflows:
         inputs:
         - content: |-
             set -ex
+            brew upgrade xclogparser
             xclogparser parse --project $BITRISE_SCHEME --reporter html --output ./xcbuildlogparser
             zip -r $BITRISE_DEPLOY_DIR/activity_logs.zip ./xcbuildlogparser
             echo "Deploy dir: $BITRISE_DEPLOY_DIR"
