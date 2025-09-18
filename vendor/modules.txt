@@ -40,7 +40,7 @@ github.com/bitrise-io/go-xcode/profileutil
 github.com/bitrise-io/go-xcode/xcodebuild
 github.com/bitrise-io/go-xcode/xcodecache
 github.com/bitrise-io/go-xcode/xcodeproject/serialized
-# github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.67
+# github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.68
 ## explicit; go 1.22
 github.com/bitrise-io/go-xcode/v2/errorfinder
 github.com/bitrise-io/go-xcode/v2/loginterceptor
