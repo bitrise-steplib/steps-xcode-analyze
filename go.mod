@@ -10,7 +10,7 @@ require (
 	github.com/bitrise-io/go-utils v1.0.13
 	github.com/bitrise-io/go-utils/v2 v2.0.0-alpha.26
 	github.com/bitrise-io/go-xcode v1.3.0
-	github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.68
+	github.com/bitrise-io/go-xcode/v2 v2.0.0-alpha.69
 	github.com/bitrise-steplib/steps-xcode-archive v0.0.0-20191022071803-d25b478ae7b8
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 )
@@ -20,6 +20,7 @@ require (
 	github.com/bitrise-io/xcode-project v0.0.0-20191004122952-a4e01d69cacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fullsailor/pkcs7 v0.0.0-20190404230743-d7302db945fa // indirect
+	github.com/globocom/go-buffer/v2 v2.0.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
