@@ -5,7 +5,7 @@ summary: |-
 description: |-
   The Step uses the static analyzer built directly into Xcode to analyze your app's source code: the static analyzer tries out thousands of possible code paths in a few seconds, reporting potential bugs that might have remained hidden or bugs that might be nearly impossible to replicate.
 
-  This process also identifies areas in your code that don’t follow recommended API usage, such as Foundation, UIKit, and AppKit idioms.
+  This process also identifies areas in your code that don't follow recommended API usage, such as Foundation, UIKit, and AppKit idioms.
 
   ### Configuring the Step
 
@@ -57,7 +57,7 @@ inputs:
   opts:
     title: Working directory
     summary: Working directory of the Step
-    description: |
+    description: |-
       Working directory of the Step.
       If you leave it empty, the default working directory will be used.
     is_required: false
@@ -66,7 +66,7 @@ inputs:
   opts:
     title: Xcode project or workspace path
     summary: The path of the `.xcodeproj` or `.xcworkspace` file
-    description: |
+    description: |-
       The path to your app's `.xcodeproj` or `.xcworkspace` file, relative to
       the Step's working directory (if one is specified).
     is_required: true
@@ -76,7 +76,7 @@ inputs:
   opts:
     title: Scheme name
     summary: The Xcode scheme to use.
-    description: |
+    description: |-
       The Xcode scheme to use for the analysis.
       **IMPORTANT**: The scheme must be marked as shared in Xcode!
     is_required: true
@@ -85,6 +85,8 @@ inputs:
 - is_clean_build: "no"
   opts:
     title: Do a clean Xcode build before testing?
+    description: |-
+      Do a clean Xcode build before testing?
     value_options:
     - "yes"
     - "no"
