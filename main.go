@@ -206,7 +206,7 @@ func main() {
 
 	rawXcodebuildOut, xcErr := runCommandWithRetry(xcodeCommandRunner, conf.OutputTool, analyzeCmd, swiftPackagesPath, logger)
 	if xcErr != nil {
-		if outputTool == "xcpretty" {
+		if outputTool != "xcpretty" {
 			logger.Errorf("\nLast lines of the Xcode's build log:")
 			fmt.Println(stringutil.LastNLines(rawXcodebuildOut, 10))
 
