@@ -35,12 +35,13 @@ support_url: https://github.com/bitrise-steplib/steps-xcode-analyze/issues
 host_os_tags:
 - osx-10.10
 project_type_tags:
+- cordova
+- flutter
+- ionic
 - ios
+- kotlin-multiplatform
 - macos
 - react-native
-- cordova
-- ionic
-- flutter
 type_tags:
 - test
 
