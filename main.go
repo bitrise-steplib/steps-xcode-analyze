@@ -5,12 +5,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-steputils/v2/ruby"
 	"github.com/bitrise-io/go-utils/errorutil"
-	"github.com/bitrise-io/go-utils/sliceutil"
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/bitrise-io/go-utils/v2/command"
 	"github.com/bitrise-io/go-utils/v2/env"
@@ -195,7 +195,7 @@ func main() {
 
 	analyzeCmd.SetCustomOptions(customOptions)
 
-	if !sliceutil.IsStringInSlice("-resultBundlePath", customOptions) {
+	if !slices.Contains(customOptions, "-resultBundlePath") {
 		analyzeCmd.SetResultBundlePath(xcresultPath)
 	}
 
