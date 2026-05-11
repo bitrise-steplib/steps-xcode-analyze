@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"slices"
 
+	"github.com/bitrise-io/bitrise-build-cache-cli/v2/pkg/reactnative/wrap"
 	"github.com/bitrise-io/go-steputils/stepconf"
 	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-steputils/v2/ruby"
@@ -69,12 +71,21 @@ func main() {
 	pathChecker := pathutil.NewPathChecker()
 	fileManager := fileutil.NewFileManager()
 
+	// Only the factory handed to the xcodecommand runner gets wrapped — codesign,
+	// project readers, and other cmdFactory consumers keep invoking binaries
+	// directly.
+	det := wrap.Detect(context.Background(), wrap.DetectParams{Logger: logger})
+	if det.ReactNativeEnabled {
+		logger.Infof("Bitrise Build Cache: React Native cache active — wrapping xcodebuild with %s", det.CLIPath)
+	}
+	runnerCmdFactory := wrap.NewWrappingCommandFactory(cmdFactory, det, "xcodebuild")
+
 	xcodeCommandRunner := xcodecommand.Runner(nil)
 	switch conf.OutputTool {
 	case XcodebuildTool:
-		xcodeCommandRunner = xcodecommand.NewRawCommandRunner(logger, cmdFactory)
+		xcodeCommandRunner = xcodecommand.NewRawCommandRunner(logger, runnerCmdFactory)
 	case XcbeautifyTool:
-		xcodeCommandRunner = xcodecommand.NewXcbeautifyRunner(logger, cmdFactory)
+		xcodeCommandRunner = xcodecommand.NewXcbeautifyRunner(logger, runnerCmdFactory)
 	case XcprettyTool:
 		commandLocator := env.NewCommandLocator()
 		rubyComamndFactory, err := ruby.NewCommandFactory(cmdFactory, commandLocator)
@@ -83,7 +94,7 @@ func main() {
 		}
 		rubyEnv := ruby.NewEnvironment(rubyComamndFactory, commandLocator, logger)
 
-		xcodeCommandRunner = xcodecommand.NewXcprettyCommandRunner(logger, cmdFactory, pathChecker, fileManager, rubyComamndFactory, rubyEnv)
+		xcodeCommandRunner = xcodecommand.NewXcprettyCommandRunner(logger, runnerCmdFactory, pathChecker, fileManager, rubyComamndFactory, rubyEnv)
 	default:
 		panic(fmt.Sprintf("Unknown log formatter: %s", conf.OutputTool))
 	}
