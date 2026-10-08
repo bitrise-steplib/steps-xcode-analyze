@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -73,12 +74,17 @@ type Command interface {
 	RunAndReturnTrimmedCombinedOutput() (string, error)
 	Start() error
 	Wait() error
+	Signal(sig os.Signal) error
+	Kill() error
 }
 
 type command struct {
 	cmd            *exec.Cmd
 	errorCollector *errorCollector
 }
+
+// ErrProcessNotStarted ...
+var ErrProcessNotStarted = errors.New("command has not been started")
 
 // PrintableCommandArgs ...
 func (c command) PrintableCommandArgs() string {
@@ -152,6 +158,26 @@ func (c command) Wait() error {
 	return err
 }
 
+// Signal ...
+func (c command) Signal(sig os.Signal) error {
+	if c.cmd.Process == nil {
+		return ErrProcessNotStarted
+	}
+	// os.Process tracks completion itself, so signalling after Wait reports ErrProcessDone
+	// instead of reaching a process that reused the PID. Reading cmd.ProcessState here would
+	// race with Wait.
+	if err := c.cmd.Process.Signal(sig); err != nil {
+		return fmt.Errorf("signalling command failed (%s): %w", c.PrintableCommandArgs(), err)
+	}
+
+	return nil
+}
+
+// Kill ...
+func (c command) Kill() error {
+	return c.Signal(os.Kill)
+}
+
 func printableCommandArgs(isQuoteFirst bool, fullCommandArgs []string) string {
 	var cmdArgsDecorated []string
 	for idx, anArg := range fullCommandArgs {
@@ -170,7 +196,7 @@ func (c command) wrapError(err error) error {
 	if errors.As(err, &exitErr) {
 		errorLines := []string{}
 		if c.errorCollector != nil {
-			errorLines = c.errorCollector.errorLines
+			errorLines = c.errorCollector.collectedErrorLines()
 		}
 
 		return NewExitStatusError(c.PrintableCommandArgs(), exitErr, errorLines)
@@ -184,17 +210,29 @@ func (c command) wrapOutputs() {
 		return
 	}
 
-	if c.cmd.Stdout != nil {
-		outWriter := io.MultiWriter(c.errorCollector, c.cmd.Stdout)
-		c.cmd.Stdout = outWriter
-	} else {
-		c.cmd.Stdout = c.errorCollector
+	// os/exec gives the child a single pipe and a single copy goroutine for stdout and stderr only while
+	// cmd.Stdout and cmd.Stderr compare equal. Two separate MultiWriters would break that and hand a writer the
+	// caller shares between the two streams (a bytes.Buffer, a filter) to two goroutines at once. Wrap once instead.
+	if c.cmd.Stderr != nil && interfaceEqual(c.cmd.Stdout, c.cmd.Stderr) {
+		shared := c.collectFrom(c.cmd.Stdout)
+		c.cmd.Stdout = shared
+		c.cmd.Stderr = shared
+		return
 	}
 
-	if c.cmd.Stderr != nil {
-		errWriter := io.MultiWriter(c.errorCollector, c.cmd.Stderr)
-		c.cmd.Stderr = errWriter
-	} else {
-		c.cmd.Stderr = c.errorCollector
+	c.cmd.Stdout = c.collectFrom(c.cmd.Stdout)
+	c.cmd.Stderr = c.collectFrom(c.cmd.Stderr)
+}
+
+func (c command) collectFrom(w io.Writer) io.Writer {
+	if w == nil {
+		return c.errorCollector
 	}
+	return io.MultiWriter(c.errorCollector, w)
+}
+
+// interfaceEqual compares the two writers the way os/exec does, without panicking on uncomparable dynamic types.
+func interfaceEqual(a, b any) bool {
+	defer func() { _ = recover() }()
+	return a == b
 }
